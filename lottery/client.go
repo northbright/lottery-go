@@ -3,7 +3,7 @@ package lottery
 import (
 	"fmt"
 	"log"
-	"net/http"
+	//"net/http"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -21,14 +21,6 @@ const (
 
 	// Maximum message size allowed from peer.
 	maxMessageSize = 512
-)
-
-var (
-	upgrader = websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
-		CheckOrigin:     func(*http.Request) bool { return true },
-	}
 )
 
 // Client is a middleman between the websocket connection and the peer.
