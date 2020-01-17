@@ -16,7 +16,27 @@ var (
 	}
 )
 
+type Settings struct {
+}
+
+type State struct {
+}
+
+type DB interface {
+	ListIDs() []string
+	Load(ID string) (*Drawing, error)
+	Save(ID string, d *Drawing) error
+	LoadSettings(ID string) (*Settings, error)
+	SaveSettings(ID string, s *Settings) error
+	LoadState(ID string) (*State, error)
+	SaveState(ID string, s *State) error
+}
+
 type Drawing struct {
+	id       string
+	settings Settings
+	state    State
+	db       *DB
 }
 
 func (d *Drawing) Handler(w http.ResponseWriter, r *http.Request) {
