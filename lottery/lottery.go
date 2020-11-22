@@ -6,12 +6,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	//"math/rand"
-	"path"
 	//"sync"
 	//"time"
 
 	"github.com/northbright/csvhelper"
-	"github.com/northbright/pathhelper"
 )
 
 type Participant struct {
@@ -42,9 +40,6 @@ type Lottery struct {
 }
 
 func (l *Lottery) LoadParticipants(file string) error {
-	currentDir, _ := pathhelper.GetCurrentExecDir()
-	file = path.Join(currentDir, file)
-
 	rows, err := csvhelper.ReadFile(file)
 	if err != nil {
 		return err
@@ -60,10 +55,11 @@ func (l *Lottery) LoadParticipants(file string) error {
 	return nil
 }
 
-func (l *Lottery) LoadConfig(file string) error {
-	currentDir, _ := pathhelper.GetCurrentExecDir()
-	file = path.Join(currentDir, file)
+func (l *Lottery) GetParticipants() []Participant {
+	return l.participants
+}
 
+func (l *Lottery) LoadConfig(file string) error {
 	// Load Conifg.
 	buf, err := ioutil.ReadFile(file)
 	if err != nil {
