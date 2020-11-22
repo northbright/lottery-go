@@ -1,0 +1,4 @@
+github.com/northbright/csvhelper v0.0.0-20180402060143-eaaadd19d5ca h1:alIoudAtkAdpV1S+Yklwhqfc+5K1G0WCH9xEd9pHf4I=
+github.com/northbright/csvhelper v0.0.0-20180402060143-eaaadd19d5ca/go.mod h1:up5C3PSrdlqjHVfNec6NTVFidgbAw22yCf3EAqtLyx8=
+github.com/northbright/pathhelper v0.0.0-20170328083152-212a42014bc5 h1:uKFhxacpm493kkB929t1QWr5epTtSWiQXhGl4aNUNzw=
+github.com/northbright/pathhelper v0.0.0-20170328083152-212a42014bc5/go.mod h1:j1FrncyZPgf6OApjGJArGsOZM101MYv40ebu5eypu+A=
