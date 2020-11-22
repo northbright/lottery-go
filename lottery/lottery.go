@@ -60,11 +60,14 @@ func (l *Lottery) GetParticipants() []Participant {
 }
 
 func (l *Lottery) LoadConfig(file string) error {
-	// Load Conifg.
 	buf, err := ioutil.ReadFile(file)
 	if err != nil {
 		return err
 	}
 
 	return json.Unmarshal(buf, &l.config)
+}
+
+func (l *Lottery) GetConfig() Config {
+	return l.config
 }

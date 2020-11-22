@@ -1,0 +1,12 @@
+{
+    "prizes": [
+        {"name":"grade 5 prize", "num": 10, "content": "USB Hard drive"},
+        {"name":"grade 4 prize", "num": 8, "content": "Bluetooth Speaker"},
+	{"name":"grade 3 prize", "num": 5, "content": "Vacuum Cleaner"},
+	{"name":"grade 2 prize", "num": 2, "content": "Macbook Pro"},
+	{"name":"grade 1 prize", "num": 1, "content": "iPhone"}
+    ],
+    "blacklists": [
+        {"max_prize_index": 2, "ids":["33"]}
+    ]
+}
