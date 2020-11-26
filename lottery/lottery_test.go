@@ -11,7 +11,6 @@ func ExampleLottery_LoadParticipants() {
 	var (
 		err     error
 		csvFile = "participants.example.csv"
-		//configFile = "./config.example.json"
 	)
 
 	l := lottery.Lottery{}
