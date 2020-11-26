@@ -39,6 +39,10 @@ type Lottery struct {
 	winners      map[int][]Participant
 }
 
+var (
+	ErrParticipantsCSV = fmt.Errorf("incorrect participants CSV")
+)
+
 func (l *Lottery) LoadParticipants(file string) error {
 	rows, err := csvhelper.ReadFile(file)
 	if err != nil {
@@ -48,7 +52,7 @@ func (l *Lottery) LoadParticipants(file string) error {
 	l.participants = []Participant{}
 	for _, row := range rows {
 		if len(row) != 2 {
-			return fmt.Errorf("incorrect participants CSV")
+			return ErrParticipantsCSV
 		}
 		l.participants = append(l.participants, Participant{row[0], row[1]})
 	}
