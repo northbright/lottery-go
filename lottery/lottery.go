@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"sort"
+	"strconv"
 	//"math/rand"
 	//"sync"
 	//"time"
@@ -69,7 +70,17 @@ func (l *Lottery) GetParticipants() []Participant {
 	}
 
 	sort.Slice(participants, func(i, j int) bool {
-		return participants[i].ID < participants[j].ID
+		// Try to convert ID from string to uint
+		nID1, err1 := strconv.ParseUint(participants[i].ID, 10, 64)
+		nID2, err2 := strconv.ParseUint(participants[j].ID, 10, 64)
+
+		// Compare strings
+		if err1 != nil || err2 != nil {
+			return participants[i].ID < participants[j].ID
+		}
+
+		// Compare uints
+		return nID1 < nID2
 	})
 
 	return participants
