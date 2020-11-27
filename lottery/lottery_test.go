@@ -13,7 +13,7 @@ func ExampleLottery_LoadParticipants() {
 		csvFile = "participants.example.csv"
 	)
 
-	l := lottery.Lottery{}
+	l := lottery.New()
 	if err = l.LoadParticipants(csvFile); err != nil {
 		log.Printf("load participants from CSV error: %v\n", err)
 		return
@@ -47,7 +47,7 @@ func ExampleLottery_LoadConfig() {
 		configFile = "config.example.json"
 	)
 
-	l := lottery.Lottery{}
+	l := lottery.New()
 	if err = l.LoadConfig(configFile); err != nil {
 		log.Printf("load config from JSON error: %v\n", err)
 		return

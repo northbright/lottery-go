@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strconv"
 	//"math/rand"
-	//"sync"
+	"sync"
 	//"time"
 
 	"github.com/northbright/csvhelper"
@@ -39,13 +39,24 @@ type Lottery struct {
 	config       Config
 	participants map[string]Participant
 	winners      map[int][]string
+	mutex        *sync.Mutex
 }
 
 var (
 	ErrParticipantsCSV = fmt.Errorf("incorrect participants CSV")
 )
 
+func New() *Lottery {
+	l := &Lottery{}
+	l.mutex = &sync.Mutex{}
+
+	return l
+}
+
 func (l *Lottery) LoadParticipants(file string) error {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
+
 	rows, err := csvhelper.ReadFile(file)
 	if err != nil {
 		return err
@@ -86,10 +97,16 @@ func participantsMapToSlice(m map[string]Participant) []Participant {
 }
 
 func (l *Lottery) GetParticipants() []Participant {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
+
 	return participantsMapToSlice(l.participants)
 }
 
 func (l *Lottery) LoadConfig(file string) error {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
+
 	buf, err := ioutil.ReadFile(file)
 	if err != nil {
 		return err
@@ -99,10 +116,16 @@ func (l *Lottery) LoadConfig(file string) error {
 }
 
 func (l *Lottery) GetConfig() Config {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
+
 	return l.config
 }
 
 func (l *Lottery) getAvailableParticipants(nPrizeIndex int) []Participant {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
+
 	participants := l.participants
 
 	// Remove winners
