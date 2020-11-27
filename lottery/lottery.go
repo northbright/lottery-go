@@ -1,15 +1,14 @@
 package lottery
 
 import (
-	//"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"sort"
 	"strconv"
-	//"math/rand"
 	"sync"
-	//"time"
+	"time"
 
 	"github.com/northbright/csvhelper"
 )
@@ -38,17 +37,25 @@ type Config struct {
 type Lottery struct {
 	config       Config
 	participants map[string]Participant
-	winners      map[int][]string
+	winners      map[int][]Participant
 	mutex        *sync.Mutex
 }
 
 var (
-	ErrParticipantsCSV = fmt.Errorf("incorrect participants CSV")
+	ErrParticipantsCSV         = fmt.Errorf("incorrect participants CSV")
+	ErrPrizeIndex              = fmt.Errorf("incorrect prize index")
+	ErrWinnersExistBeforeDraw  = fmt.Errorf("winners exist before draw")
+	ErrPrizeNum                = fmt.Errorf("incorrect prize num")
+	ErrNoAvailableParticipants = fmt.Errorf("no available participants")
 )
 
 func New() *Lottery {
-	l := &Lottery{}
-	l.mutex = &sync.Mutex{}
+	l := &Lottery{
+		Config{},
+		make(map[string]Participant),
+		make(map[int][]Participant),
+		&sync.Mutex{},
+	}
 
 	return l
 }
@@ -123,15 +130,12 @@ func (l *Lottery) GetConfig() Config {
 }
 
 func (l *Lottery) getAvailableParticipants(nPrizeIndex int) []Participant {
-	l.mutex.Lock()
-	defer l.mutex.Unlock()
-
 	participants := l.participants
 
 	// Remove winners
-	for _, IDs := range l.winners {
-		for _, ID := range IDs {
-			delete(participants, ID)
+	for _, winners := range l.winners {
+		for _, winner := range winners {
+			delete(participants, winner.ID)
 		}
 	}
 
@@ -145,4 +149,53 @@ func (l *Lottery) getAvailableParticipants(nPrizeIndex int) []Participant {
 	}
 
 	return participantsMapToSlice(participants)
+}
+
+func removeParticipant(s []Participant, i int) []Participant {
+	l := len(s)
+	if l <= 0 {
+		return s
+	}
+
+	if i < 0 || i > l-1 {
+		return s
+	}
+
+	s[i] = s[l-1]
+	return s[:l-1]
+}
+
+func (l *Lottery) Draw(nPrizeIndex int) ([]Participant, error) {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
+
+	var winners []Participant
+
+	if nPrizeIndex < 0 || nPrizeIndex >= len(l.config.Prizes) {
+		return winners, ErrPrizeIndex
+	}
+
+	num := l.config.Prizes[nPrizeIndex].Num
+	if num < 1 {
+		return winners, ErrPrizeNum
+	}
+
+	if _, ok := l.winners[nPrizeIndex]; ok {
+		return winners, ErrWinnersExistBeforeDraw
+	}
+
+	participants := l.getAvailableParticipants(nPrizeIndex)
+	if len(participants) == 0 {
+		return winners, ErrNoAvailableParticipants
+	}
+
+	for i := 0; i < num; i++ {
+		rand.Seed(time.Now().UnixNano())
+		index := rand.Intn(len(participants))
+		winners = append(winners, participants[index])
+		participants = removeParticipant(participants, index)
+	}
+
+	l.winners[nPrizeIndex] = winners
+	return winners, nil
 }
