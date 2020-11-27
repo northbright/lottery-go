@@ -61,11 +61,10 @@ func (l *Lottery) LoadParticipants(file string) error {
 	return nil
 }
 
-func (l *Lottery) GetParticipants() []Participant {
+func participantsMapToSlice(m map[string]Participant) []Participant {
 	var participants []Participant
 
-	// Sort participants by IDs
-	for _, p := range l.participants {
+	for _, p := range m {
 		participants = append(participants, p)
 	}
 
@@ -86,6 +85,10 @@ func (l *Lottery) GetParticipants() []Participant {
 	return participants
 }
 
+func (l *Lottery) GetParticipants() []Participant {
+	return participantsMapToSlice(l.participants)
+}
+
 func (l *Lottery) LoadConfig(file string) error {
 	buf, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -97,4 +100,26 @@ func (l *Lottery) LoadConfig(file string) error {
 
 func (l *Lottery) GetConfig() Config {
 	return l.config
+}
+
+func (l *Lottery) getAvailableParticipants(nPrizeIndex int) []Participant {
+	participants := l.participants
+
+	// Remove winners
+	for _, IDs := range l.winners {
+		for _, ID := range IDs {
+			delete(participants, ID)
+		}
+	}
+
+	// Remove blacklists
+	for _, blacklist := range l.config.Blacklists {
+		if blacklist.MaxPrizeIndex < nPrizeIndex {
+			for _, ID := range blacklist.IDs {
+				delete(participants, ID)
+			}
+		}
+	}
+
+	return participantsMapToSlice(participants)
 }
