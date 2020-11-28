@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
-	"sort"
-	"strconv"
 	"sync"
 	"time"
 
@@ -42,11 +40,13 @@ type Lottery struct {
 }
 
 var (
-	ErrParticipantsCSV         = fmt.Errorf("incorrect participants CSV")
-	ErrPrizeIndex              = fmt.Errorf("incorrect prize index")
-	ErrWinnersExistBeforeDraw  = fmt.Errorf("winners exist before draw")
-	ErrPrizeNum                = fmt.Errorf("incorrect prize num")
-	ErrNoAvailableParticipants = fmt.Errorf("no available participants")
+	ErrParticipantsCSV               = fmt.Errorf("incorrect participants CSV")
+	ErrPrizeIndex                    = fmt.Errorf("incorrect prize index")
+	ErrWinnersExistBeforeDraw        = fmt.Errorf("winners exist before draw")
+	ErrPrizeNum                      = fmt.Errorf("incorrect prize num")
+	ErrNoAvailableParticipants       = fmt.Errorf("no available participants")
+	ErrNoOriginalWinnersBeforeRedraw = fmt.Errorf("no original winners before redraw")
+	ErrRevokedWinnerNotMatch         = fmt.Errorf("revoked winner does not match")
 )
 
 func New() *Lottery {
@@ -79,35 +79,31 @@ func (l *Lottery) LoadParticipants(file string) error {
 	return nil
 }
 
-func participantsMapToSlice(m map[string]Participant) []Participant {
+func participantMapToSlice(m map[string]Participant) []Participant {
 	var participants []Participant
 
 	for _, p := range m {
 		participants = append(participants, p)
 	}
 
-	sort.Slice(participants, func(i, j int) bool {
-		// Try to convert ID from string to uint
-		nID1, err1 := strconv.ParseUint(participants[i].ID, 10, 64)
-		nID2, err2 := strconv.ParseUint(participants[j].ID, 10, 64)
-
-		// Compare strings
-		if err1 != nil || err2 != nil {
-			return participants[i].ID < participants[j].ID
-		}
-
-		// Compare uints
-		return nID1 < nID2
-	})
-
 	return participants
+}
+
+func participantSliceToMap(s []Participant) map[string]Participant {
+	m := make(map[string]Participant)
+
+	for _, p := range s {
+		m[p.ID] = p
+	}
+
+	return m
 }
 
 func (l *Lottery) GetParticipants() []Participant {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
-	return participantsMapToSlice(l.participants)
+	return participantMapToSlice(l.participants)
 }
 
 func (l *Lottery) LoadConfig(file string) error {
@@ -148,7 +144,7 @@ func (l *Lottery) getAvailableParticipants(nPrizeIndex int) []Participant {
 		}
 	}
 
-	return participantsMapToSlice(participants)
+	return participantMapToSlice(participants)
 }
 
 func (l *Lottery) GetAvailableParticipants(nPrizeIndex int) []Participant {
@@ -183,6 +179,31 @@ func removeParticipant(s []Participant, i int) []Participant {
 	return s[:l-1]
 }
 
+func draw(prizeNum int, participants []Participant) []Participant {
+	var winners []Participant
+
+	if prizeNum <= 0 || len(participants) <= 0 {
+		return winners
+	}
+
+	// Check prize num.
+	num := prizeNum
+	// If participants num < prize num,
+	// use participants num as the new prize num.
+	if len(participants) < prizeNum {
+		num = len(participants)
+	}
+
+	for i := 0; i < num; i++ {
+		rand.Seed(time.Now().UnixNano())
+		index := rand.Intn(len(participants))
+		winners = append(winners, participants[index])
+		participants = removeParticipant(participants, index)
+	}
+
+	return winners
+}
+
 func (l *Lottery) Draw(nPrizeIndex int) ([]Participant, error) {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
@@ -207,13 +228,55 @@ func (l *Lottery) Draw(nPrizeIndex int) ([]Participant, error) {
 		return winners, ErrNoAvailableParticipants
 	}
 
-	for i := 0; i < num; i++ {
-		rand.Seed(time.Now().UnixNano())
-		index := rand.Intn(len(participants))
-		winners = append(winners, participants[index])
-		participants = removeParticipant(participants, index)
-	}
+	winners = draw(num, participants)
 
 	l.winners[nPrizeIndex] = winners
+	return winners, nil
+}
+
+func (l *Lottery) Redraw(nPrizeIndex int, revokedWinners []Participant) ([]Participant, error) {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
+
+	var winners []Participant
+
+	if nPrizeIndex < 0 || nPrizeIndex >= len(l.config.Prizes) {
+		return winners, ErrPrizeIndex
+	}
+
+	num := l.config.Prizes[nPrizeIndex].Num
+	if num < 1 {
+		return winners, ErrPrizeNum
+	}
+
+	if _, ok := l.winners[nPrizeIndex]; !ok {
+		return winners, ErrNoOriginalWinnersBeforeRedraw
+	}
+
+	// Remove original winners for the prize before re-draw.
+	originalWinnerMap := participantSliceToMap(l.winners[nPrizeIndex])
+
+	for _, revokedWinner := range revokedWinners {
+		if _, ok := originalWinnerMap[revokedWinner.ID]; !ok {
+			return winners, ErrRevokedWinnerNotMatch
+		}
+		delete(originalWinnerMap, revokedWinner.ID)
+	}
+
+	l.winners[nPrizeIndex] = participantMapToSlice(originalWinnerMap)
+
+	participants := l.getAvailableParticipants(nPrizeIndex)
+	if len(participants) == 0 {
+		return winners, ErrNoAvailableParticipants
+	}
+
+	// Prize num of redraw = num of revoked winners.
+	num = len(revokedWinners)
+
+	// Get new winners.
+	winners = draw(num, participants)
+
+	// Append new winners and original winners.
+	l.winners[nPrizeIndex] = append(l.winners[nPrizeIndex], winners...)
 	return winners, nil
 }

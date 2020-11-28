@@ -50,11 +50,22 @@ func Example() {
 	}
 
 	// Draw a prize.
-	winners, err := l.Draw(0)
-	log.Printf("Winners: %v\n", winners)
+	nPrizeIndex := 0
+	log.Printf("draw prize: %v(index = %v)\n", config.Prizes[nPrizeIndex], nPrizeIndex)
+	winners, err := l.Draw(nPrizeIndex)
+	log.Printf("winners: %v\n", winners)
 
-	winners = l.GetWinners(0)
-	log.Printf("Winners: %v\n", winners)
+	// Revoke old winners and redraw.
+	revokedWinners := []lottery.Participant{winners[0], winners[1]}
+	log.Printf("revoke winners: %v\n", revokedWinners)
+
+	newWinners, err := l.Redraw(nPrizeIndex, revokedWinners)
+	log.Printf("re-draw prize: %v(index = %v)\n", config.Prizes[nPrizeIndex], nPrizeIndex)
+	log.Printf("new winners: %v\n", newWinners)
+
+	// Get complete updated winners.
+	winners = l.GetWinners(nPrizeIndex)
+	log.Printf("winners: %v\n", winners)
 
 	// Output:
 }
