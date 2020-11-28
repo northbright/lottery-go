@@ -151,6 +151,24 @@ func (l *Lottery) getAvailableParticipants(nPrizeIndex int) []Participant {
 	return participantsMapToSlice(participants)
 }
 
+func (l *Lottery) GetAvailableParticipants(nPrizeIndex int) []Participant {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
+
+	return l.getAvailableParticipants(nPrizeIndex)
+}
+
+func (l *Lottery) GetWinners(nPrizeIndex int) []Participant {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
+
+	if _, ok := l.winners[nPrizeIndex]; !ok {
+		return []Participant{}
+	}
+
+	return l.winners[nPrizeIndex]
+}
+
 func removeParticipant(s []Participant, i int) []Participant {
 	l := len(s)
 	if l <= 0 {

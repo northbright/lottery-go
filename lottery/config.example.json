@@ -7,6 +7,6 @@
 	{"name":"grade 1 prize", "num": 1, "content": "iPhone"}
     ],
     "blacklists": [
-        {"max_prize_index": 2, "ids":["33"]}
+        {"max_prize_index": 0, "ids":["33"]}
     ]
 }
