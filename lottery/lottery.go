@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"sort"
 	"sync"
 	"time"
 
@@ -288,4 +289,33 @@ func (l *Lottery) Redraw(nPrizeIndex int, revokedWinners []Participant) ([]Parti
 	// Append new winners and original winners.
 	l.winners[nPrizeIndex] = append(l.winners[nPrizeIndex], winners...)
 	return winners, nil
+}
+
+func winnerMapToSlice(m map[int][]Participant) [][]Participant {
+	var (
+		arr     []int
+		winners [][]Participant
+	)
+
+	// Sort map by key(prize index).
+	for k, _ := range m {
+		arr = append(arr, k)
+	}
+
+	sort.Slice(arr, func(i, j int) bool {
+		return arr[i] < arr[j]
+	})
+
+	for _, prizeIndex := range arr {
+		winners = append(winners, m[prizeIndex])
+	}
+
+	return winners
+}
+
+func (l *Lottery) GetAllWinners() [][]Participant {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
+
+	return winnerMapToSlice(l.winners)
 }

@@ -37,7 +37,7 @@ func Example() {
 		log.Printf("max prize index: %v, IDs: %v", blacklist.MaxPrizeIndex, blacklist.IDs)
 	}
 
-	// Draw a prize.
+	// Draw a prize(index=0, grade=5).
 	nPrizeIndex := 0
 	log.Printf("draw prize: %v(index = %v)", config.Prizes[nPrizeIndex], nPrizeIndex)
 	winners, _ := l.Draw(nPrizeIndex)
@@ -54,6 +54,18 @@ func Example() {
 	// Get complete updated winners.
 	winners = l.GetWinners(nPrizeIndex)
 	log.Printf("winners: %v", winners)
+
+	// Draw a prize(index=1, grade=4).
+	nPrizeIndex = 1
+	log.Printf("draw prize: %v(index = %v)", config.Prizes[nPrizeIndex], nPrizeIndex)
+	winners, _ = l.Draw(nPrizeIndex)
+	log.Printf("winners: %v", winners)
+
+	// Get all winners.
+	allWinners := l.GetAllWinners()
+	for i, winners := range allWinners {
+		log.Printf("prize index %v: %v", i, winners)
+	}
 
 	// Output:
 }
