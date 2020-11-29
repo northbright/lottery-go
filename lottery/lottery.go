@@ -50,7 +50,7 @@ var (
 	ErrRevokedWinnerNotMatch         = fmt.Errorf("revoked winner does not match")
 )
 
-func New() *Lottery {
+func New(csvFile, configFile string) *Lottery {
 	l := &Lottery{
 		Config{},
 		make(map[string]Participant),
@@ -58,10 +58,18 @@ func New() *Lottery {
 		&sync.Mutex{},
 	}
 
+	if err := l.loadParticipants(csvFile); err != nil {
+		return nil
+	}
+
+	if err := l.loadConfig(configFile); err != nil {
+		return nil
+	}
+
 	return l
 }
 
-func (l *Lottery) LoadParticipants(file string) error {
+func (l *Lottery) loadParticipants(file string) error {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
@@ -107,7 +115,7 @@ func (l *Lottery) GetParticipants() []Participant {
 	return participantMapToSlice(l.participants)
 }
 
-func (l *Lottery) LoadConfig(file string) error {
+func (l *Lottery) loadConfig(file string) error {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
