@@ -39,6 +39,7 @@ func Example() {
 	log.Printf("load config successfully\n")
 
 	config := l.GetConfig()
+	log.Printf("name: %s\n", config.Name)
 	log.Printf("prizes:\n")
 	for _, prize := range config.Prizes {
 		log.Printf("name: %v, count: %v, content: %v\n", prize.Name, prize.Num, prize.Content)

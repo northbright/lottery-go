@@ -28,6 +28,7 @@ type Blacklist struct {
 }
 
 type Config struct {
+	Name       string      `json:"name"`
 	Prizes     []Prize     `json:"prizes"`
 	Blacklists []Blacklist `json:"blacklists"`
 }

@@ -1,4 +1,5 @@
 {
+    "name":"New Year Party Lottery",
     "prizes": [
         {"name":"grade 5 prize", "num": 10, "content": "USB Hard drive"},
         {"name":"grade 4 prize", "num": 8, "content": "Bluetooth Speaker"},
