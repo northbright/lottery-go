@@ -313,6 +313,16 @@ func winnerMapToSlice(m map[int][]Participant) [][]Participant {
 	return winners
 }
 
+func winnerSliceToMap(s [][]Participant) map[int][]Participant {
+	m := make(map[int][]Participant)
+
+	for i, participants := range s {
+		m[i] = participants
+	}
+
+	return m
+}
+
 func (l *Lottery) GetAllWinners() [][]Participant {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
