@@ -1,11 +1,13 @@
 package lottery
 
 import (
+	"crypto/md5"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"sort"
+	"strconv"
 	"sync"
 	"time"
 
@@ -316,11 +318,26 @@ func winnerMapToSlice(m map[int][]Participant) [][]Participant {
 func winnerSliceToMap(s [][]Participant) map[int][]Participant {
 	m := make(map[int][]Participant)
 
-	for i, participants := range s {
-		m[i] = participants
+	for nPrizeIndex, winnersOfPrize := range s {
+		m[nPrizeIndex] = winnersOfPrize
 	}
 
 	return m
+}
+
+func computeWinnersHash(winners [][]Participant) []byte {
+	h := md5.New()
+
+	for nPrizeIndex, winnersOfPrize := range winners {
+		s := strconv.FormatInt(int64(nPrizeIndex), 10)
+		h.Write([]byte(s))
+		for _, winner := range winnersOfPrize {
+			h.Write([]byte(winner.ID))
+			h.Write([]byte(winner.Name))
+		}
+	}
+
+	return h.Sum(nil)
 }
 
 func (l *Lottery) GetAllWinners() [][]Participant {
