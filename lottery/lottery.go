@@ -452,5 +452,4 @@ func (l *Lottery) Load() error {
 	l.winners = winnerSliceToMap(data.Winners)
 
 	return nil
-
 }
