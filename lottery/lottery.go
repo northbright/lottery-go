@@ -67,6 +67,7 @@ var (
 	ErrNoAvailableParticipants       = fmt.Errorf("no available participants")
 	ErrNoOriginalWinnersBeforeRedraw = fmt.Errorf("no original winners before redraw")
 	ErrRevokedWinnerNotMatch         = fmt.Errorf("revoked winner does not match")
+	ErrChecksum                      = fmt.Errorf("incorrect checksum")
 )
 
 func New(csvFile, configFile string) *Lottery {
@@ -426,4 +427,30 @@ func (l *Lottery) Save() error {
 	}
 
 	return nil
+}
+
+func (l *Lottery) Load() error {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
+
+	buf, err := ioutil.ReadFile(l.dataFile)
+	if err != nil {
+		return err
+	}
+
+	data := SaveData{}
+	if err := json.Unmarshal(buf, &data); err != nil {
+		return err
+	}
+
+	checksum := computeWinnersHash(data.Winners)
+	if fmt.Sprintf("%X", checksum) != data.Checksum {
+		return ErrChecksum
+	}
+
+	// Load winners.
+	l.winners = winnerSliceToMap(data.Winners)
+
+	return nil
+
 }
