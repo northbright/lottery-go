@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math/rand"
+	"os"
+	"path"
 	"sort"
 	"strconv"
 	"sync"
@@ -36,12 +39,25 @@ type Config struct {
 	Blacklists []Blacklist `json:"blacklists"`
 }
 
+type SaveData struct {
+	Name        string          `json:"name"`
+	Winners     [][]Participant `json:"winners"`
+	LastUpdated string          `json:"last_updated"`
+	Checksum    string          `json:"checksum"`
+}
+
 type Lottery struct {
 	config       Config
 	participants map[string]Participant
 	winners      map[int][]Participant
 	mutex        *sync.Mutex
+	appDataDir   string
+	dataFile     string
 }
+
+const (
+	AppName = "lottery-go"
+)
 
 var (
 	ErrParticipantsCSV               = fmt.Errorf("incorrect participants CSV")
@@ -59,15 +75,28 @@ func New(csvFile, configFile string) *Lottery {
 		make(map[string]Participant),
 		make(map[int][]Participant),
 		&sync.Mutex{},
+		"",
+		"",
 	}
 
 	if err := l.loadParticipants(csvFile); err != nil {
+		log.Printf("loadParticipants() error: %v", err)
 		return nil
 	}
 
 	if err := l.loadConfig(configFile); err != nil {
+		log.Printf("loadConfig() error: %v", err)
 		return nil
 	}
+
+	dir, err := l.createAppDataDir()
+	if err != nil {
+		log.Printf("createAppDataDir() error: %v", err)
+		return nil
+	}
+	l.appDataDir = dir
+
+	l.dataFile = l.makeDataFileName()
 
 	return l
 }
@@ -345,4 +374,56 @@ func (l *Lottery) GetAllWinners() [][]Participant {
 	defer l.mutex.Unlock()
 
 	return winnerMapToSlice(l.winners)
+}
+
+func (l *Lottery) makeDataFileName() string {
+	h := md5.New()
+	f := fmt.Sprintf("%X.json", h.Sum([]byte(l.config.Name)))
+	return path.Join(l.appDataDir, f)
+}
+
+func (l *Lottery) createAppDataDir() (string, error) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+
+	dir := path.Join(homeDir, AppName)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return "", err
+	}
+	return dir, nil
+}
+
+func (l *Lottery) Save() error {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
+
+	winners := winnerMapToSlice(l.winners)
+	tm := time.Now()
+
+	data := SaveData{
+		l.config.Name,
+		winners,
+		fmt.Sprintf("%04d-%02d-%02d %02d:%02d:%02d",
+			tm.Year(),
+			tm.Month(),
+			tm.Day(),
+			tm.Hour(),
+			tm.Minute(),
+			tm.Second(),
+		),
+		fmt.Sprintf("%X", computeWinnersHash(winners)),
+	}
+
+	buf, err := json.MarshalIndent(&data, "", "    ")
+	if err != nil {
+		return err
+	}
+
+	if err := ioutil.WriteFile(l.dataFile, buf, 0644); err != nil {
+		return err
+	}
+
+	return nil
 }

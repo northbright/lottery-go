@@ -67,5 +67,11 @@ func Example() {
 		log.Printf("prize index %v: %v", i, winners)
 	}
 
+	// Save data(include all winners).
+	if err := l.Save(); err != nil {
+		log.Printf("save() error: %v", err)
+		return
+	}
+
 	// Output:
 }
