@@ -355,21 +355,6 @@ func winnerSliceToMap(s [][]Participant) map[int][]Participant {
 	return m
 }
 
-func computeWinnersHash(winners [][]Participant) []byte {
-	h := md5.New()
-
-	for nPrizeIndex, winnersOfPrize := range winners {
-		s := strconv.FormatInt(int64(nPrizeIndex), 10)
-		h.Write([]byte(s))
-		for _, winner := range winnersOfPrize {
-			h.Write([]byte(winner.ID))
-			h.Write([]byte(winner.Name))
-		}
-	}
-
-	return h.Sum(nil)
-}
-
 func (l *Lottery) GetAllWinners() [][]Participant {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
@@ -394,6 +379,21 @@ func (l *Lottery) createAppDataDir() (string, error) {
 		return "", err
 	}
 	return dir, nil
+}
+
+func computeWinnersHash(winners [][]Participant) []byte {
+	h := md5.New()
+
+	for nPrizeIndex, winnersOfPrize := range winners {
+		s := strconv.FormatInt(int64(nPrizeIndex), 10)
+		h.Write([]byte(s))
+		for _, winner := range winnersOfPrize {
+			h.Write([]byte(winner.ID))
+			h.Write([]byte(winner.Name))
+		}
+	}
+
+	return h.Sum(nil)
 }
 
 func (l *Lottery) Save() error {
