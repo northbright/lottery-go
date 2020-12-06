@@ -99,9 +99,11 @@ func Example() {
 	}
 	log.Printf("load data successfully")
 
-	// Get winners of prize index == 0 again.
-	winners = l.GetWinners(0)
-	log.Printf("winners of prize 0: %v", winners)
+	// Get all winners again.
+	allWinners = l.GetAllWinners()
+	for i, winners := range allWinners {
+		log.Printf("prize index %v: %v", i, winners)
+	}
 
 	// Output:
 }
