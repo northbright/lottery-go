@@ -362,6 +362,21 @@ func (l *Lottery) GetAllWinners() [][]Participant {
 	return winnerMapToSlice(l.winners)
 }
 
+func (l *Lottery) ClearWinners(nPrizeIndex int) {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
+
+	// Clear the winner slice.
+	l.winners[nPrizeIndex] = []Participant{}
+}
+
+func (l *Lottery) ClearAllWinners() {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
+
+	l.winners = make(map[int][]Participant)
+}
+
 func (l *Lottery) makeDataFileName() string {
 	h := md5.New()
 	f := fmt.Sprintf("%X.json", h.Sum([]byte(l.config.Name)))

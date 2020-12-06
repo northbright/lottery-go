@@ -39,27 +39,27 @@ func Example() {
 
 	// Draw a prize(index=0, grade=5).
 	nPrizeIndex := 0
-	log.Printf("draw prize: %v(index = %v)", config.Prizes[nPrizeIndex], nPrizeIndex)
+	log.Printf("draw prize %v: %v", nPrizeIndex, config.Prizes[nPrizeIndex])
 	winners, _ := l.Draw(nPrizeIndex)
-	log.Printf("winners: %v", winners)
+	log.Printf("winners of prize %v: %v", nPrizeIndex, winners)
 
 	// Revoke old winners and redraw.
 	revokedWinners := []lottery.Participant{winners[0], winners[1]}
-	log.Printf("revoke winners: %v", revokedWinners)
+	log.Printf("revoke winners of prize %v: %v", nPrizeIndex, revokedWinners)
 
 	newWinners, _ := l.Redraw(nPrizeIndex, revokedWinners)
-	log.Printf("re-draw prize: %v(index = %v)", config.Prizes[nPrizeIndex], nPrizeIndex)
-	log.Printf("new winners: %v", newWinners)
+	log.Printf("re-draw prize %v: %v", nPrizeIndex, config.Prizes[nPrizeIndex])
+	log.Printf("new winners of prize %v: %v", nPrizeIndex, newWinners)
 
 	// Get complete updated winners.
 	winners = l.GetWinners(nPrizeIndex)
-	log.Printf("winners: %v", winners)
+	log.Printf("winners of prize %v: %v", nPrizeIndex, winners)
 
 	// Draw a prize(index=1, grade=4).
 	nPrizeIndex = 1
-	log.Printf("draw prize: %v(index = %v)", config.Prizes[nPrizeIndex], nPrizeIndex)
+	log.Printf("draw prize %v: %v", nPrizeIndex, config.Prizes[nPrizeIndex])
 	winners, _ = l.Draw(nPrizeIndex)
-	log.Printf("winners: %v", winners)
+	log.Printf("winners of prize %v: %v", nPrizeIndex, winners)
 
 	// Get all winners.
 	allWinners := l.GetAllWinners()
@@ -80,6 +80,28 @@ func Example() {
 		return
 	}
 	log.Printf("load data successfully")
+
+	// Clear winners for prize index == 0
+	l.ClearWinners(0)
+	log.Printf("clear winners of prize 0")
+
+	// Save data
+	if err := l.Save(); err != nil {
+		log.Printf("Save() error: %v", err)
+		return
+	}
+	log.Printf("save data successfully")
+
+	// Load data
+	if err := l.Load(); err != nil {
+		log.Printf("Load() error: %v", err)
+		return
+	}
+	log.Printf("load data successfully")
+
+	// Get winners of prize index == 0 again.
+	winners = l.GetWinners(0)
+	log.Printf("winners of prize 0: %v", winners)
 
 	// Output:
 }
