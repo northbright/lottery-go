@@ -23,9 +23,9 @@ type Participant struct {
 }
 
 type Prize struct {
-	Name    string `json:"name"`
-	Num     int    `json:"num"`
-	Content string `json:"content"`
+	Name string `json:"name"`
+	Num  int    `json:"num"`
+	Desc string `json:"desc"`
 }
 
 type Blacklist struct {

@@ -29,7 +29,7 @@ func Example() {
 	log.Printf("name: %s", config.Name)
 	log.Printf("prizes:")
 	for _, prize := range config.Prizes {
-		log.Printf("name: %v, count: %v, content: %v", prize.Name, prize.Num, prize.Content)
+		log.Printf("name: %v, count: %v, desc: %v", prize.Name, prize.Num, prize.Desc)
 	}
 
 	log.Printf("blacklists:\n")
@@ -72,6 +72,7 @@ func Example() {
 		log.Printf("Save() error: %v", err)
 		return
 	}
+	log.Printf("save data successfully")
 
 	// Load data
 	if err := l.Load(); err != nil {
