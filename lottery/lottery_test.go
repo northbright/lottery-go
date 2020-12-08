@@ -8,63 +8,87 @@ import (
 
 func Example() {
 	var (
-		csvFile    = "participants.example.csv"
-		configFile = "config.example.json"
+		participantsCSV = "participants.example.csv"
+		prizesCSV       = "prizes.example.csv"
+		blacklistsJSON  = "blacklists.example.json"
 	)
 
 	// Create a lottery.
-	l := lottery.New(csvFile, configFile)
-	if l == nil {
-		log.Printf("invalid participants csv file or config file")
+	l := lottery.New("New Year Party Lucky Draw")
+
+	if err := l.SetParticipantsFromCSV(participantsCSV); err != nil {
+		log.Printf("SetParticipantsFromCSV() error: %v", err)
 		return
 	}
+	log.Printf("SetParticipantsFromCSV() successfully")
 
-	participants := l.GetParticipants()
 	log.Printf("participants:")
-	for _, p := range participants {
+	for _, p := range l.Participants {
 		log.Printf("ID: %v, Name: %v", p.ID, p.Name)
 	}
 
-	config := l.GetConfig()
-	log.Printf("name: %s", config.Name)
-	log.Printf("prizes:")
-	for _, prize := range config.Prizes {
-		log.Printf("name: %v, count: %v, desc: %v", prize.Name, prize.Num, prize.Desc)
+	if err := l.SetPrizesFromCSV(prizesCSV); err != nil {
+		log.Printf("SetPrizesFromCSV() error: %v", err)
+		return
 	}
+	log.Printf("SetPrizesFromCSV() successfully")
+
+	log.Printf("prizes:")
+	for prizeNo, prize := range l.Prizes {
+		log.Printf("no: %v, name: %v, count: %v, desc: %v", prizeNo, prize.Name, prize.Amount, prize.Desc)
+	}
+
+	if err := l.SetBlacklistsFromJSON(blacklistsJSON); err != nil {
+		log.Printf("SetBlacklistsFromJSON() error: %v", err)
+		return
+	}
+	log.Printf("SetBlacklistsFromJSON() successfully")
 
 	log.Printf("blacklists:\n")
-	for _, blacklist := range config.Blacklists {
-		log.Printf("max prize index: %v, IDs: %v", blacklist.MaxPrizeIndex, blacklist.IDs)
+	for maxPrizeNo, blacklist := range l.Blacklists {
+		log.Printf("max prize no: %v, IDs: %v", maxPrizeNo, blacklist.IDs)
 	}
 
-	// Draw a prize(index=0, grade=5).
-	nPrizeIndex := 0
-	log.Printf("draw prize %v: %v", nPrizeIndex, config.Prizes[nPrizeIndex])
-	winners, _ := l.Draw(nPrizeIndex)
-	log.Printf("winners of prize %v: %v", nPrizeIndex, winners)
+	// Draw prize no.5.
+	log.Printf("draw prize no.5: %v", l.Prizes[5])
+	winners, err := l.Draw(5)
+	if err != nil {
+		log.Printf("draw() error: %v", err)
+		return
+	}
+
+	log.Printf("winners of prize no.5: %v", winners)
 
 	// Revoke old winners and redraw.
 	revokedWinners := []lottery.Participant{winners[0], winners[1]}
-	log.Printf("revoke winners of prize %v: %v", nPrizeIndex, revokedWinners)
+	log.Printf("revoke winners of prize no.5: %v", revokedWinners)
 
-	newWinners, _ := l.Redraw(nPrizeIndex, revokedWinners)
-	log.Printf("re-draw prize %v: %v", nPrizeIndex, config.Prizes[nPrizeIndex])
-	log.Printf("new winners of prize %v: %v", nPrizeIndex, newWinners)
+	log.Printf("re-draw prize no.5: %v", l.Prizes[5])
+	newWinners, err := l.Redraw(5, revokedWinners)
+	if err != nil {
+		log.Printf("Redraw() error: %v", err)
+		return
+	}
+	log.Printf("new winners of prize no.5: %v", newWinners)
 
 	// Get complete updated winners.
-	winners = l.GetWinners(nPrizeIndex)
-	log.Printf("winners of prize %v: %v", nPrizeIndex, winners)
+	winners = l.GetWinners(5)
+	log.Printf("winners of prize no.5: %v", winners)
 
-	// Draw a prize(index=1, grade=4).
-	nPrizeIndex = 1
-	log.Printf("draw prize %v: %v", nPrizeIndex, config.Prizes[nPrizeIndex])
-	winners, _ = l.Draw(nPrizeIndex)
-	log.Printf("winners of prize %v: %v", nPrizeIndex, winners)
+	// Draw a prize no.4.
+	log.Printf("draw prize no.4: %v", l.Prizes[4])
+	winners, err = l.Draw(4)
+	if err != nil {
+		log.Printf("draw() error: %v", err)
+		return
+	}
+	log.Printf("winners of prize no.4: %v", winners)
 
 	// Get all winners.
+	log.Printf("get all winners:")
 	allWinners := l.GetAllWinners()
-	for i, winners := range allWinners {
-		log.Printf("prize index %v: %v", i, winners)
+	for no, winners := range allWinners {
+		log.Printf("prize no %v: %v", no, winners)
 	}
 
 	// Save data(include all winners).
@@ -81,8 +105,8 @@ func Example() {
 	}
 	log.Printf("load data successfully")
 
-	// Clear winners for prize index == 0
-	l.ClearWinners(0)
+	// Clear winners for prize no == 5
+	l.ClearWinners(5)
 	log.Printf("clear winners of prize 0")
 
 	// Save data
@@ -101,9 +125,12 @@ func Example() {
 
 	// Get all winners again.
 	allWinners = l.GetAllWinners()
-	for i, winners := range allWinners {
-		log.Printf("prize index %v: %v", i, winners)
+	for no, winners := range allWinners {
+		log.Printf("prize no %v: %v", no, winners)
 	}
+
+	log.Printf("l: %v", l)
+	log.Printf("l.Participants: %v", l.Participants)
 
 	// Output:
 }
