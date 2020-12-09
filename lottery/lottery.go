@@ -393,8 +393,7 @@ func (l *Lottery) ClearAllWinners() {
 }
 
 func makeDataFileName(name string) string {
-	h := md5.New()
-	f := fmt.Sprintf("%X.json", h.Sum([]byte(name)))
+	f := fmt.Sprintf("%X.json", md5.Sum([]byte(name)))
 	return path.Join(AppDataDir, f)
 }
 
