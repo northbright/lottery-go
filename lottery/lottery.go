@@ -204,8 +204,18 @@ func (l *Lottery) GetParticipants() []Participant {
 	return participantMapToSlice(l.Participants)
 }
 
+func copyParticipantMap(m map[string]Participant) map[string]Participant {
+	copiedMap := make(map[string]Participant)
+
+	for k, v := range m {
+		copiedMap[k] = v
+	}
+
+	return copiedMap
+}
+
 func (l *Lottery) getAvailableParticipants(nPrizeNo int) []Participant {
-	participants := l.Participants
+	participants := copyParticipantMap(l.Participants)
 
 	// Remove winners
 	for _, winners := range l.Winners {
