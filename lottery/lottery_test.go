@@ -129,8 +129,5 @@ func Example() {
 		log.Printf("prize no %v: %v", no, winners)
 	}
 
-	log.Printf("l: %v", l)
-	log.Printf("l.Participants: %v", l.Participants)
-
 	// Output:
 }

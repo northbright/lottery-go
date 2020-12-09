@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"os"
 	"path"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -415,12 +416,22 @@ func CreateAppDataDir() (string, error) {
 }
 
 func computeWinnersHash(winners map[int][]Participant) []byte {
-	h := md5.New()
+	var arr []int
 
-	for nPrizeNo, winnersOfPrize := range winners {
-		s := strconv.FormatInt(int64(nPrizeNo), 10)
+	// Sort winner map by key
+	for prizeNo, _ := range winners {
+		arr = append(arr, prizeNo)
+	}
+
+	sort.Slice(arr, func(i, j int) bool {
+		return arr[i] < arr[j]
+	})
+
+	h := md5.New()
+	for _, prizeNo := range arr {
+		s := strconv.FormatInt(int64(prizeNo), 10)
 		h.Write([]byte(s))
-		for _, winner := range winnersOfPrize {
+		for _, winner := range winners[prizeNo] {
 			h.Write([]byte(winner.ID))
 			h.Write([]byte(winner.Name))
 		}
