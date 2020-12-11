@@ -2,6 +2,7 @@ package lottery_test
 
 import (
 	"log"
+	"os"
 
 	"github.com/northbright/lottery-go/lottery"
 )
@@ -16,7 +17,10 @@ func Example() {
 	// Create a lottery.
 	l := lottery.New("New Year Party Lucky Draw")
 
-	if err := l.SetParticipantsFromCSV(participantsCSV); err != nil {
+	f1, _ := os.Open(participantsCSV)
+	defer f1.Close()
+
+	if err := l.SetParticipantsFromCSV(f1); err != nil {
 		log.Printf("SetParticipantsFromCSV() error: %v", err)
 		return
 	}
@@ -27,7 +31,10 @@ func Example() {
 		log.Printf("ID: %v, Name: %v", p.ID, p.Name)
 	}
 
-	if err := l.SetPrizesFromCSV(prizesCSV); err != nil {
+	f2, _ := os.Open(prizesCSV)
+	defer f2.Close()
+
+	if err := l.SetPrizesFromCSV(f2); err != nil {
 		log.Printf("SetPrizesFromCSV() error: %v", err)
 		return
 	}

@@ -2,8 +2,10 @@ package lottery
 
 import (
 	"crypto/md5"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -14,8 +16,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/northbright/csvhelper"
 )
 
 type Participant struct {
@@ -104,11 +104,12 @@ func (l *Lottery) SetPrize(no int, name string, amount int, desc string) {
 	l.Prizes[no] = prize
 }
 
-func (l *Lottery) SetPrizesFromCSV(file string) error {
+func (l *Lottery) SetPrizesFromCSV(r io.Reader) error {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
-	rows, err := csvhelper.ReadFile(file)
+	reader := csv.NewReader(r)
+	rows, err := reader.ReadAll()
 	if err != nil {
 		return err
 	}
@@ -156,11 +157,12 @@ func (l *Lottery) SetBlacklistsFromJSON(f string) error {
 	return json.Unmarshal(buf, &l.Blacklists)
 }
 
-func (l *Lottery) SetParticipantsFromCSV(file string) error {
+func (l *Lottery) SetParticipantsFromCSV(r io.Reader) error {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
-	rows, err := csvhelper.ReadFile(file)
+	reader := csv.NewReader(r)
+	rows, err := reader.ReadAll()
 	if err != nil {
 		return err
 	}
