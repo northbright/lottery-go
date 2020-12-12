@@ -20,3 +20,5 @@ config.json
 !*.jpg
 !*.png
 !*.gif
+# For Vue
+!*.vue
