@@ -104,7 +104,7 @@ func (l *Lottery) SetPrize(no int, name string, amount int, desc string) {
 	l.Prizes[no] = prize
 }
 
-func (l *Lottery) SetPrizesFromCSV(r io.Reader) error {
+func (l *Lottery) LoadPrizesCSV(r io.Reader) error {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
@@ -145,7 +145,7 @@ func (l *Lottery) SetBlacklist(minPrizeNo int, IDs []string) {
 	l.Blacklists[minPrizeNo] = blacklist
 }
 
-func (l *Lottery) SetBlacklistsFromJSON(f string) error {
+func (l *Lottery) LoadBlacklistsJSON(f string) error {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
@@ -157,7 +157,7 @@ func (l *Lottery) SetBlacklistsFromJSON(f string) error {
 	return json.Unmarshal(buf, &l.Blacklists)
 }
 
-func (l *Lottery) SetParticipantsFromCSV(r io.Reader) error {
+func (l *Lottery) LoadParticipantsCSV(r io.Reader) error {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 

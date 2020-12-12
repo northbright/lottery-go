@@ -20,11 +20,11 @@ func Example() {
 	f1, _ := os.Open(participantsCSV)
 	defer f1.Close()
 
-	if err := l.SetParticipantsFromCSV(f1); err != nil {
-		log.Printf("SetParticipantsFromCSV() error: %v", err)
+	if err := l.LoadParticipantsCSV(f1); err != nil {
+		log.Printf("LoadParticipantsCSV() error: %v", err)
 		return
 	}
-	log.Printf("SetParticipantsFromCSV() successfully")
+	log.Printf("LoadParticipantsCSV() successfully")
 
 	log.Printf("participants:")
 	for _, p := range l.Participants {
@@ -34,22 +34,22 @@ func Example() {
 	f2, _ := os.Open(prizesCSV)
 	defer f2.Close()
 
-	if err := l.SetPrizesFromCSV(f2); err != nil {
-		log.Printf("SetPrizesFromCSV() error: %v", err)
+	if err := l.LoadPrizesCSV(f2); err != nil {
+		log.Printf("LoadPrizesCSV() error: %v", err)
 		return
 	}
-	log.Printf("SetPrizesFromCSV() successfully")
+	log.Printf("LoadPrizesCSV() successfully")
 
 	log.Printf("prizes:")
 	for prizeNo, prize := range l.Prizes {
 		log.Printf("no: %v, name: %v, count: %v, desc: %v", prizeNo, prize.Name, prize.Amount, prize.Desc)
 	}
 
-	if err := l.SetBlacklistsFromJSON(blacklistsJSON); err != nil {
-		log.Printf("SetBlacklistsFromJSON() error: %v", err)
+	if err := l.LoadBlacklistsJSON(blacklistsJSON); err != nil {
+		log.Printf("LoadBlacklistsJSON() error: %v", err)
 		return
 	}
-	log.Printf("SetBlacklistsFromJSON() successfully")
+	log.Printf("LoadBlacklistsJSON() successfully")
 
 	log.Printf("blacklists:\n")
 	for maxPrizeNo, blacklist := range l.Blacklists {
