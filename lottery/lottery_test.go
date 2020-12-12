@@ -44,7 +44,7 @@ func Example() {
 	}
 	log.Printf("LoadBlacklistsJSONFile() successfully")
 
-	log.Printf("blacklists:\n")
+	log.Printf("blacklists:")
 	for maxPrizeNo, blacklist := range l.Blacklists {
 		log.Printf("max prize no: %v, IDs: %v", maxPrizeNo, blacklist.IDs)
 	}
