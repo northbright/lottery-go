@@ -137,6 +137,16 @@ func (l *Lottery) LoadPrizesCSV(r io.Reader) error {
 	return nil
 }
 
+func (l *Lottery) LoadPrizesCSVFile(file string) error {
+	f, err := os.Open(file)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	return l.LoadPrizesCSV(f)
+}
+
 func (l *Lottery) SetBlacklist(minPrizeNo int, IDs []string) {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
@@ -145,7 +155,7 @@ func (l *Lottery) SetBlacklist(minPrizeNo int, IDs []string) {
 	l.Blacklists[minPrizeNo] = blacklist
 }
 
-func (l *Lottery) LoadBlacklistsJSON(f string) error {
+func (l *Lottery) LoadBlacklistsJSONFile(f string) error {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
@@ -178,6 +188,16 @@ func (l *Lottery) LoadParticipantsCSV(r io.Reader) error {
 		l.Participants[ID] = Participant{ID, name}
 	}
 	return nil
+}
+
+func (l *Lottery) LoadParticipantsCSVFile(file string) error {
+	f, err := os.Open(file)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	return l.LoadParticipantsCSV(f)
 }
 
 func participantMapToSlice(m map[string]Participant) []Participant {

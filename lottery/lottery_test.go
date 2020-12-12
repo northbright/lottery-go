@@ -2,7 +2,6 @@ package lottery_test
 
 import (
 	"log"
-	"os"
 
 	"github.com/northbright/lottery-go/lottery"
 )
@@ -17,39 +16,33 @@ func Example() {
 	// Create a lottery.
 	l := lottery.New("New Year Party Lucky Draw")
 
-	f1, _ := os.Open(participantsCSV)
-	defer f1.Close()
-
-	if err := l.LoadParticipantsCSV(f1); err != nil {
-		log.Printf("LoadParticipantsCSV() error: %v", err)
+	if err := l.LoadParticipantsCSVFile(participantsCSV); err != nil {
+		log.Printf("LoadParticipantsCSVFile() error: %v", err)
 		return
 	}
-	log.Printf("LoadParticipantsCSV() successfully")
+	log.Printf("LoadParticipantsCSVFile() successfully")
 
 	log.Printf("participants:")
 	for _, p := range l.Participants {
 		log.Printf("ID: %v, Name: %v", p.ID, p.Name)
 	}
 
-	f2, _ := os.Open(prizesCSV)
-	defer f2.Close()
-
-	if err := l.LoadPrizesCSV(f2); err != nil {
-		log.Printf("LoadPrizesCSV() error: %v", err)
+	if err := l.LoadPrizesCSVFile(prizesCSV); err != nil {
+		log.Printf("LoadPrizesCSVFile() error: %v", err)
 		return
 	}
-	log.Printf("LoadPrizesCSV() successfully")
+	log.Printf("LoadPrizesCSVFile() successfully")
 
 	log.Printf("prizes:")
 	for prizeNo, prize := range l.Prizes {
 		log.Printf("no: %v, name: %v, count: %v, desc: %v", prizeNo, prize.Name, prize.Amount, prize.Desc)
 	}
 
-	if err := l.LoadBlacklistsJSON(blacklistsJSON); err != nil {
-		log.Printf("LoadBlacklistsJSON() error: %v", err)
+	if err := l.LoadBlacklistsJSONFile(blacklistsJSON); err != nil {
+		log.Printf("LoadBlacklistsJSONFile() error: %v", err)
 		return
 	}
-	log.Printf("LoadBlacklistsJSON() successfully")
+	log.Printf("LoadBlacklistsJSONFile() successfully")
 
 	log.Printf("blacklists:\n")
 	for maxPrizeNo, blacklist := range l.Blacklists {
