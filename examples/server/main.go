@@ -29,6 +29,7 @@ var (
 	lott             *lottery.Lottery
 )
 
+// getLottery returns the lottery data.
 func getLottery(w http.ResponseWriter, r *http.Request) {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "    ")
