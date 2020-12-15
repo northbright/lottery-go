@@ -26,15 +26,14 @@ var (
 	participantsCSV  string
 	prizesCSV        string
 	blacklistsJSON   string
+	lott             *lottery.Lottery
 )
 
 func getLotterySettings(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("getLotterySettings\n"))
+
 }
 
 // GetCurrentExecDir gets the current executable path.
-// You may find more path helper functions in:
-// https://github.com/northbright/pathhelper
 func GetCurrentExecDir() (dir string, err error) {
 	p, err := exec.LookPath(os.Args[0])
 	if err != nil {
@@ -89,31 +88,43 @@ func main() {
 	log.Printf("load config successfully. config: %v", config)
 
 	// Create a lottery.
-	l := lottery.New(config.LotteryName)
+	lott = lottery.New(config.LotteryName)
 
-	// Load participants.
-	if err := l.LoadParticipantsCSVFile(participantsCSV); err != nil {
-		log.Printf("load participants CSV error: %v", err)
-		return
-	}
-	log.Printf("load participants CSV successfully")
-	log.Printf("participants: %v", l.Participants)
+	// Check if data file is already saved.
+	if lott.DataFileExists() {
+		// The lottery started and saved the data.
+		// Load the data and continue.
+		log.Printf("saved data file found")
+		if err := lott.LoadFromFile(); err != nil {
+			log.Printf("load data file error: %v", err)
+			return
+		}
+	} else {
+		// 1st run for the lottery.
+		// Load participants.
+		if err := lott.LoadParticipantsCSVFile(participantsCSV); err != nil {
+			log.Printf("load participants CSV error: %v", err)
+			return
+		}
+		log.Printf("load participants CSV successfully")
+		log.Printf("participants: %v", lott.Participants)
 
-	// Load prizes.
-	if err := l.LoadPrizesCSVFile(prizesCSV); err != nil {
-		log.Printf("load prizes CSV error: %v", err)
-		return
-	}
-	log.Printf("load prizes CSV successfully")
-	log.Printf("prizes: %v", l.Prizes)
+		// Load prizes.
+		if err := lott.LoadPrizesCSVFile(prizesCSV); err != nil {
+			log.Printf("load prizes CSV error: %v", err)
+			return
+		}
+		log.Printf("load prizes CSV successfully")
+		log.Printf("prizes: %v", lott.Prizes)
 
-	// Load blacklists.
-	if err := l.LoadBlacklistsJSONFile(blacklistsJSON); err != nil {
-		log.Printf("load blacklists JSON error: %v", err)
-		return
+		// Load blacklists.
+		if err := lott.LoadBlacklistsJSONFile(blacklistsJSON); err != nil {
+			log.Printf("load blacklists JSON error: %v", err)
+			return
+		}
+		log.Printf("load blacklists JSON successfully")
+		log.Printf("blacklists: %v", lott.Blacklists)
 	}
-	log.Printf("load blacklists JSON successfully")
-	log.Printf("blacklists: %v", l.Blacklists)
 
 	// Serve Static Files
 	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir(staticFolderPath))))
