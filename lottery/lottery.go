@@ -412,10 +412,6 @@ func makeDataFileName(name string) string {
 	return path.Join(AppDataDir, f)
 }
 
-func (l *Lottery) DataFileExists() bool {
-	return false
-}
-
 func CreateAppDataDir() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -524,4 +520,13 @@ func (l *Lottery) LoadFromFile() error {
 	defer f.Close()
 
 	return l.Load(f)
+}
+
+func (l *Lottery) DataFileExists() bool {
+	dataFile := makeDataFileName(l.Name)
+
+	if _, err := os.Stat(dataFile); os.IsNotExist(err) {
+		return false
+	}
+	return true
 }
