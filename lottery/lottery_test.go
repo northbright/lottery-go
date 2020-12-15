@@ -107,7 +107,7 @@ func Example() {
 
 	// Clear winners for prize no == 5
 	l.ClearWinners(5)
-	log.Printf("clear winners of prize 0")
+	log.Printf("clear winners of prize 5")
 
 	// Save data
 	if err := l.SaveToFile(); err != nil {
