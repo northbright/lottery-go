@@ -92,14 +92,14 @@ func Example() {
 	}
 
 	// Save data(include all winners).
-	if err := l.Save(); err != nil {
+	if err := l.SaveToFile(); err != nil {
 		log.Printf("Save() error: %v", err)
 		return
 	}
 	log.Printf("save data successfully")
 
 	// Load data
-	if err := l.Load(); err != nil {
+	if err := l.LoadFromFile(); err != nil {
 		log.Printf("Load() error: %v", err)
 		return
 	}
@@ -110,14 +110,14 @@ func Example() {
 	log.Printf("clear winners of prize 0")
 
 	// Save data
-	if err := l.Save(); err != nil {
+	if err := l.SaveToFile(); err != nil {
 		log.Printf("Save() error: %v", err)
 		return
 	}
 	log.Printf("save data successfully")
 
 	// Load data
-	if err := l.Load(); err != nil {
+	if err := l.LoadFromFile(); err != nil {
 		log.Printf("Load() error: %v", err)
 		return
 	}

@@ -88,14 +88,6 @@ func New(name string) *Lottery {
 	return l
 }
 
-func Load(name string) (*Lottery, error) {
-	l := New(name)
-	if err := l.Load(); err != nil {
-		return nil, err
-	}
-	return l, nil
-}
-
 func (l *Lottery) SetPrize(no int, name string, amount int, desc string) {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
@@ -462,7 +454,7 @@ func computeWinnersHash(winners map[int][]Participant) []byte {
 	return h.Sum(nil)
 }
 
-func (l *Lottery) Save() error {
+func (l *Lottery) Save(w io.Writer) error {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
@@ -481,31 +473,31 @@ func (l *Lottery) Save() error {
 		fmt.Sprintf("%X", computeWinnersHash(l.Winners)),
 	}
 
-	buf, err := json.MarshalIndent(&data, "", "    ")
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "    ")
+	return enc.Encode(&data)
+}
+
+func (l *Lottery) SaveToFile() error {
+	dataFile := makeDataFileName(l.Name)
+
+	f, err := os.Create(dataFile)
 	if err != nil {
 		return err
 	}
+	defer f.Close()
 
-	dataFile := makeDataFileName(l.Name)
-	if err := ioutil.WriteFile(dataFile, buf, 0644); err != nil {
-		return err
-	}
-
-	return nil
+	return l.Save(f)
 }
 
-func (l *Lottery) Load() error {
+func (l *Lottery) Load(r io.Reader) error {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
-	dataFile := makeDataFileName(l.Name)
-	buf, err := ioutil.ReadFile(dataFile)
-	if err != nil {
-		return err
-	}
-
 	data := SaveData{}
-	if err := json.Unmarshal(buf, &data); err != nil {
+	dec := json.NewDecoder(r)
+
+	if err := dec.Decode(&data); err != nil {
 		return err
 	}
 
@@ -520,4 +512,16 @@ func (l *Lottery) Load() error {
 	l.Winners = data.Lottery.Winners
 
 	return nil
+}
+
+func (l *Lottery) LoadFromFile() error {
+	dataFile := makeDataFileName(l.Name)
+
+	f, err := os.Open(dataFile)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	return l.Load(f)
 }
