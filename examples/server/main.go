@@ -29,8 +29,13 @@ var (
 	lott             *lottery.Lottery
 )
 
-func getLotterySettings(w http.ResponseWriter, r *http.Request) {
-
+func getLottery(w http.ResponseWriter, r *http.Request) {
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "    ")
+	if err := enc.Encode(&lott); err != nil {
+		log.Printf("getLottery() encode error: %v", err)
+		return
+	}
 }
 
 // GetCurrentExecDir gets the current executable path.
@@ -126,11 +131,11 @@ func main() {
 		log.Printf("blacklists: %v", lott.Blacklists)
 	}
 
-	// Serve Static Files
+	// Serve Static Files.
 	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir(staticFolderPath))))
 
-	// Get lottery settings
-	http.HandleFunc("/lottery_settings", getLotterySettings)
+	// Get lottery data.
+	http.HandleFunc("/lottery", getLottery)
 
 	err = http.ListenAndServe(config.Addr, nil)
 	if err != nil {
