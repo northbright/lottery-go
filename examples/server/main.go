@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -35,6 +36,68 @@ func getLottery(w http.ResponseWriter, r *http.Request) {
 	enc.SetIndent("", "    ")
 	if err := enc.Encode(&lott); err != nil {
 		log.Printf("getLottery() encode error: %v", err)
+		return
+	}
+}
+
+// draw draws a prize and returns the winners.
+func draw(w http.ResponseWriter, r *http.Request) {
+	type DrawRequest struct {
+		PrizeNo int `json:"prize_no"`
+	}
+
+	type DrawResponse struct {
+		Success bool                  `json:"success"`
+		ErrMsg  string                `json:"err_msg,omitempty"`
+		PrizeNo int                   `json:"prize_no"`
+		Winners []lottery.Participant `json:"winners"`
+	}
+
+	var (
+		errMsg  string
+		req     DrawRequest
+		winners []lottery.Participant
+	)
+
+	defer func() {
+		resp := DrawResponse{}
+
+		if errMsg == "" {
+			resp.Success = true
+			resp.PrizeNo = req.PrizeNo
+			resp.Winners = winners
+		} else {
+			resp.Success = false
+			resp.ErrMsg = errMsg
+			log.Printf("draw(): error: %v", errMsg)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "    ")
+		if err := enc.Encode(&resp); err != nil {
+			log.Printf("draw() encode JSON error: %v", err)
+			return
+		}
+	}()
+
+	if r.Method != "POST" {
+		errMsg = fmt.Sprintf("draw(): HTTP method is NOT POST(%v)", r.Method)
+		return
+	}
+
+	dec := json.NewDecoder(r.Body)
+	if err := dec.Decode(&req); err != nil {
+		errMsg = fmt.Sprintf("draw(): decode JSON error: %v", err)
+		return
+	}
+
+	log.Printf("draw() json.Unmarshal() successfully. req: %v", req)
+
+	winners, err := lott.Draw(req.PrizeNo)
+	if err != nil {
+		errMsg = fmt.Sprintf("draw(): Draw() error: %v", err)
 		return
 	}
 }
@@ -137,6 +200,9 @@ func main() {
 
 	// Get lottery data.
 	http.HandleFunc("/lottery", getLottery)
+
+	// Draw a prize.
+	http.HandleFunc("/draw", draw)
 
 	err = http.ListenAndServe(config.Addr, nil)
 	if err != nil {
