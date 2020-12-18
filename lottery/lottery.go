@@ -229,7 +229,7 @@ func copyParticipantMap(m map[string]Participant) map[string]Participant {
 	return copiedMap
 }
 
-func (l *Lottery) getAvailableParticipants(nPrizeNo int) []Participant {
+func (l *Lottery) getAvailableParticipants(prizeNo int) []Participant {
 	participants := copyParticipantMap(l.Participants)
 
 	// Remove winners
@@ -241,7 +241,7 @@ func (l *Lottery) getAvailableParticipants(nPrizeNo int) []Participant {
 
 	// Remove blacklists
 	for _, blacklist := range l.Blacklists {
-		if blacklist.MinPrizeNo > nPrizeNo {
+		if blacklist.MinPrizeNo > prizeNo {
 			for _, ID := range blacklist.IDs {
 				delete(participants, ID)
 			}
@@ -251,22 +251,22 @@ func (l *Lottery) getAvailableParticipants(nPrizeNo int) []Participant {
 	return participantMapToSlice(participants)
 }
 
-func (l *Lottery) GetAvailableParticipants(nPrizeNo int) []Participant {
+func (l *Lottery) GetAvailableParticipants(prizeNo int) []Participant {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
-	return l.getAvailableParticipants(nPrizeNo)
+	return l.getAvailableParticipants(prizeNo)
 }
 
-func (l *Lottery) GetWinners(nPrizeNo int) []Participant {
+func (l *Lottery) GetWinners(prizeNo int) []Participant {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
-	if _, ok := l.Winners[nPrizeNo]; !ok {
+	if _, ok := l.Winners[prizeNo]; !ok {
 		return []Participant{}
 	}
 
-	return l.Winners[nPrizeNo]
+	return l.Winners[prizeNo]
 }
 
 func removeParticipant(s []Participant, i int) []Participant {
@@ -308,57 +308,57 @@ func draw(prizeAmount int, participants []Participant) []Participant {
 	return winners
 }
 
-func (l *Lottery) Draw(nPrizeNo int) ([]Participant, error) {
+func (l *Lottery) Draw(prizeNo int) ([]Participant, error) {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
 	var winners []Participant
 
-	if _, ok := l.Prizes[nPrizeNo]; !ok {
+	if _, ok := l.Prizes[prizeNo]; !ok {
 		return winners, ErrPrizeNo
 	}
 
-	amount := l.Prizes[nPrizeNo].Amount
+	amount := l.Prizes[prizeNo].Amount
 	if amount < 1 {
 		return winners, ErrPrizeAmount
 	}
 
-	if _, ok := l.Winners[nPrizeNo]; ok {
+	if _, ok := l.Winners[prizeNo]; ok {
 		return winners, ErrWinnersExistBeforeDraw
 	}
 
-	participants := l.getAvailableParticipants(nPrizeNo)
+	participants := l.getAvailableParticipants(prizeNo)
 	if len(participants) == 0 {
 		return winners, ErrNoAvailableParticipants
 	}
 
 	winners = draw(amount, participants)
 
-	l.Winners[nPrizeNo] = winners
+	l.Winners[prizeNo] = winners
 	return winners, nil
 }
 
-func (l *Lottery) Redraw(nPrizeNo int, revokedWinners []Participant) ([]Participant, error) {
+func (l *Lottery) Redraw(prizeNo int, revokedWinners []Participant) ([]Participant, error) {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
 	var winners []Participant
 
-	if _, ok := l.Prizes[nPrizeNo]; !ok {
+	if _, ok := l.Prizes[prizeNo]; !ok {
 		return winners, ErrPrizeNo
 	}
 
-	amount := l.Prizes[nPrizeNo].Amount
+	amount := l.Prizes[prizeNo].Amount
 	if amount < 1 {
 		return winners, ErrPrizeAmount
 	}
 
-	if _, ok := l.Winners[nPrizeNo]; !ok {
+	if _, ok := l.Winners[prizeNo]; !ok {
 		return winners, ErrNoOriginalWinnersBeforeRedraw
 	}
 
 	// Remove original winners for the prize before re-draw.
-	originalWinnerMap := participantSliceToMap(l.Winners[nPrizeNo])
+	originalWinnerMap := participantSliceToMap(l.Winners[prizeNo])
 
 	for _, revokedWinner := range revokedWinners {
 		if _, ok := originalWinnerMap[revokedWinner.ID]; !ok {
@@ -367,9 +367,9 @@ func (l *Lottery) Redraw(nPrizeNo int, revokedWinners []Participant) ([]Particip
 		delete(originalWinnerMap, revokedWinner.ID)
 	}
 
-	l.Winners[nPrizeNo] = participantMapToSlice(originalWinnerMap)
+	l.Winners[prizeNo] = participantMapToSlice(originalWinnerMap)
 
-	participants := l.getAvailableParticipants(nPrizeNo)
+	participants := l.getAvailableParticipants(prizeNo)
 	if len(participants) == 0 {
 		return winners, ErrNoAvailableParticipants
 	}
@@ -381,7 +381,7 @@ func (l *Lottery) Redraw(nPrizeNo int, revokedWinners []Participant) ([]Particip
 	winners = draw(amount, participants)
 
 	// Append new winners and original winners.
-	l.Winners[nPrizeNo] = append(l.Winners[nPrizeNo], winners...)
+	l.Winners[prizeNo] = append(l.Winners[prizeNo], winners...)
 	return winners, nil
 }
 
@@ -392,12 +392,12 @@ func (l *Lottery) GetAllWinners() map[int][]Participant {
 	return l.Winners
 }
 
-func (l *Lottery) ClearWinners(nPrizeNo int) {
+func (l *Lottery) ClearWinners(prizeNo int) {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
 	// Clear the winner slice.
-	l.Winners[nPrizeNo] = []Participant{}
+	l.Winners[prizeNo] = []Participant{}
 }
 
 func (l *Lottery) ClearAllWinners() {
