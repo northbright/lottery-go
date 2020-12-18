@@ -42,11 +42,11 @@ func getLottery(w http.ResponseWriter, r *http.Request) {
 
 // draw draws a prize and returns the winners.
 func draw(w http.ResponseWriter, r *http.Request) {
-	type DrawRequest struct {
+	type Request struct {
 		PrizeNo int `json:"prize_no"`
 	}
 
-	type DrawResponse struct {
+	type Response struct {
 		Success bool                  `json:"success"`
 		ErrMsg  string                `json:"err_msg,omitempty"`
 		PrizeNo int                   `json:"prize_no"`
@@ -55,12 +55,12 @@ func draw(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		errMsg  string
-		req     DrawRequest
+		req     Request
 		winners []lottery.Participant
 	)
 
 	defer func() {
-		resp := DrawResponse{}
+		resp := Response{}
 
 		if errMsg == "" {
 			resp.Success = true
