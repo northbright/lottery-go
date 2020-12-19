@@ -61,10 +61,14 @@ func Example() {
 
 	// Revoke old winners and redraw.
 	revokedWinners := []lottery.Participant{winners[0], winners[1]}
-	log.Printf("revoke winners of prize no.5: %v", revokedWinners)
+	if err := l.Revoke(5, revokedWinners); err != nil {
+		log.Printf("revoke winners of prize no.5 error: %v", err)
+		return
+	}
+	log.Printf("revoke winners of prize no.5: %v successfully", revokedWinners)
 
-	log.Printf("re-draw prize no.5: %v", l.Prizes[5])
-	newWinners, err := l.Redraw(5, revokedWinners)
+	log.Printf("re-draw prize no.5(amount = 2): %v", l.Prizes[5])
+	newWinners, err := l.Redraw(5, 2)
 	if err != nil {
 		log.Printf("Redraw() error: %v", err)
 		return

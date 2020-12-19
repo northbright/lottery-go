@@ -62,6 +62,8 @@ var (
 	ErrNoAvailableParticipants       = fmt.Errorf("no available participants")
 	ErrNoOriginalWinnersBeforeRedraw = fmt.Errorf("no original winners before redraw")
 	ErrRevokedWinnerNotMatch         = fmt.Errorf("revoked winner does not match")
+	ErrWinnersNotExistBeforeReDraw   = fmt.Errorf("winners don't exist before redraw")
+	ErrRedrawPrizeAmount             = fmt.Errorf("incorrect redraw prize amount")
 	ErrChecksum                      = fmt.Errorf("incorrect checksum")
 	AppDataDir                       string
 )
@@ -338,7 +340,40 @@ func (l *Lottery) Draw(prizeNo int) ([]Participant, error) {
 	return winners, nil
 }
 
-func (l *Lottery) Redraw(prizeNo int, revokedWinners []Participant) ([]Participant, error) {
+// Revoke revokes the winners of the given prize.
+// It'll remove revoked winners from winners of the prize.
+func (l *Lottery) Revoke(prizeNo int, revokedWinners []Participant) error {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
+
+	if _, ok := l.Prizes[prizeNo]; !ok {
+		return ErrPrizeNo
+	}
+
+	amount := l.Prizes[prizeNo].Amount
+	if amount < 1 {
+		return ErrPrizeAmount
+	}
+
+	if _, ok := l.Winners[prizeNo]; !ok {
+		return ErrNoOriginalWinnersBeforeRedraw
+	}
+
+	// Remove original winners for the prize before re-draw.
+	originalWinnerMap := participantSliceToMap(l.Winners[prizeNo])
+
+	for _, revokedWinner := range revokedWinners {
+		if _, ok := originalWinnerMap[revokedWinner.ID]; !ok {
+			return ErrRevokedWinnerNotMatch
+		}
+		delete(originalWinnerMap, revokedWinner.ID)
+	}
+
+	l.Winners[prizeNo] = participantMapToSlice(originalWinnerMap)
+	return nil
+}
+
+func (l *Lottery) Redraw(prizeNo int, amount int) ([]Participant, error) {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
@@ -348,34 +383,22 @@ func (l *Lottery) Redraw(prizeNo int, revokedWinners []Participant) ([]Participa
 		return winners, ErrPrizeNo
 	}
 
-	amount := l.Prizes[prizeNo].Amount
-	if amount < 1 {
+	if l.Prizes[prizeNo].Amount < 1 {
 		return winners, ErrPrizeAmount
 	}
 
 	if _, ok := l.Winners[prizeNo]; !ok {
-		return winners, ErrNoOriginalWinnersBeforeRedraw
+		return winners, ErrWinnersNotExistBeforeReDraw
 	}
 
-	// Remove original winners for the prize before re-draw.
-	originalWinnerMap := participantSliceToMap(l.Winners[prizeNo])
-
-	for _, revokedWinner := range revokedWinners {
-		if _, ok := originalWinnerMap[revokedWinner.ID]; !ok {
-			return winners, ErrRevokedWinnerNotMatch
-		}
-		delete(originalWinnerMap, revokedWinner.ID)
+	if amount > l.Prizes[prizeNo].Amount-len(l.Winners[prizeNo]) {
+		return winners, ErrRedrawPrizeAmount
 	}
-
-	l.Winners[prizeNo] = participantMapToSlice(originalWinnerMap)
 
 	participants := l.getAvailableParticipants(prizeNo)
 	if len(participants) == 0 {
 		return winners, ErrNoAvailableParticipants
 	}
-
-	// Prize amount of redraw = amount of revoked winners.
-	amount = len(revokedWinners)
 
 	// Get new winners.
 	winners = draw(amount, participants)
