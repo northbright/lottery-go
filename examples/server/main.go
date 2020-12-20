@@ -40,6 +40,64 @@ func getLottery(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// getAvailableParticipants returns the available participants for given prize no.
+func getAvailableParticipants(w http.ResponseWriter, r *http.Request) {
+	type Request struct {
+		PrizeNo int `json:"prize_no"`
+	}
+
+	type Response struct {
+		Success               bool                  `json:"success"`
+		ErrMsg                string                `json:"err_msg,omitempty"`
+		PrizeNo               int                   `json:"prize_no"`
+		AvailableParticipants []lottery.Participant `json:"available_participants"`
+	}
+
+	var (
+		errMsg                string
+		req                   Request
+		availableParticipants []lottery.Participant
+	)
+
+	defer func() {
+		resp := Response{}
+
+		if errMsg == "" {
+			resp.Success = true
+			resp.PrizeNo = req.PrizeNo
+			resp.AvailableParticipants = availableParticipants
+		} else {
+			resp.Success = false
+			resp.ErrMsg = errMsg
+			log.Printf("getAvailableParticipants(): error: %v", errMsg)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "    ")
+		if err := enc.Encode(&resp); err != nil {
+			log.Printf("getAvailableParticipants() encode JSON error: %v", err)
+			return
+		}
+	}()
+
+	if r.Method != "POST" {
+		errMsg = fmt.Sprintf("draw(): HTTP method is NOT POST(%v)", r.Method)
+		return
+	}
+
+	dec := json.NewDecoder(r.Body)
+	if err := dec.Decode(&req); err != nil {
+		errMsg = fmt.Sprintf("draw(): decode JSON error: %v", err)
+		return
+	}
+
+	log.Printf("draw() json.Unmarshal() successfully. req: %v", req)
+
+	availableParticipants = lott.GetAvailableParticipants(req.PrizeNo)
+}
+
 // draw draws a prize and returns the winners.
 func draw(w http.ResponseWriter, r *http.Request) {
 	type Request struct {
@@ -200,6 +258,9 @@ func main() {
 
 	// Get lottery data.
 	http.HandleFunc("/lottery", getLottery)
+
+	// Get available participants.
+	http.HandleFunc("/available_participants", getAvailableParticipants)
 
 	// Draw a prize.
 	http.HandleFunc("/draw", draw)
