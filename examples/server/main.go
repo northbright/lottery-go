@@ -96,6 +96,61 @@ func getAvailableParticipants(w http.ResponseWriter, r *http.Request) {
 	availableParticipants = lott.GetAvailableParticipants(req.PrizeNo)
 }
 
+// getWinners returns the winners of a prize.
+func getWinners(w http.ResponseWriter, r *http.Request) {
+	type Request struct {
+		PrizeNo int `json:"prize_no"`
+	}
+
+	type Response struct {
+		Success bool                  `json:"success"`
+		ErrMsg  string                `json:"err_msg,omitempty"`
+		PrizeNo int                   `json:"prize_no"`
+		Winners []lottery.Participant `json:"winners"`
+	}
+
+	var (
+		errMsg  string
+		req     Request
+		winners []lottery.Participant
+	)
+
+	defer func() {
+		resp := Response{}
+
+		if errMsg == "" {
+			resp.Success = true
+			resp.PrizeNo = req.PrizeNo
+			resp.Winners = winners
+		} else {
+			resp.Success = false
+			resp.ErrMsg = errMsg
+			log.Printf("getWinners(): error: %v", errMsg)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "    ")
+		if err := enc.Encode(&resp); err != nil {
+			log.Printf("getWinners() encode JSON error: %v", err)
+			return
+		}
+	}()
+	if r.Method != "POST" {
+		errMsg = fmt.Sprintf("getWinners(): HTTP method is NOT POST(%v)", r.Method)
+		return
+	}
+
+	dec := json.NewDecoder(r.Body)
+	if err := dec.Decode(&req); err != nil {
+		errMsg = fmt.Sprintf("getWinners(): decode JSON error: %v", err)
+		return
+	}
+
+	winners = lott.GetWinners(req.PrizeNo)
+}
+
 // draw draws a prize and returns the winners.
 func draw(w http.ResponseWriter, r *http.Request) {
 	type Request struct {
@@ -379,6 +434,9 @@ func main() {
 
 	// Get available participants.
 	http.HandleFunc("/available_participants", getAvailableParticipants)
+
+	// Get winners.
+	http.HandleFunc("/winners", getWinners)
 
 	// Draw a prize.
 	http.HandleFunc("/draw", draw)
