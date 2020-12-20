@@ -83,17 +83,15 @@ func getAvailableParticipants(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	if r.Method != "POST" {
-		errMsg = fmt.Sprintf("draw(): HTTP method is NOT POST(%v)", r.Method)
+		errMsg = fmt.Sprintf("revoke(): HTTP method is NOT POST(%v)", r.Method)
 		return
 	}
 
 	dec := json.NewDecoder(r.Body)
 	if err := dec.Decode(&req); err != nil {
-		errMsg = fmt.Sprintf("draw(): decode JSON error: %v", err)
+		errMsg = fmt.Sprintf("revoke(): decode JSON error: %v", err)
 		return
 	}
-
-	log.Printf("draw() json.Unmarshal() successfully. req: %v", req)
 
 	availableParticipants = lott.GetAvailableParticipants(req.PrizeNo)
 }
@@ -151,11 +149,68 @@ func draw(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("draw() json.Unmarshal() successfully. req: %v", req)
-
 	winners, err := lott.Draw(req.PrizeNo)
 	if err != nil {
 		errMsg = fmt.Sprintf("draw(): Draw() error: %v", err)
+		return
+	}
+}
+
+// revoke revokes the winners of given prize no.
+func revoke(w http.ResponseWriter, r *http.Request) {
+	type Request struct {
+		PrizeNo        int                   `json:"prize_no"`
+		RevokedWinners []lottery.Participant `json:"revoked_winners"`
+	}
+
+	type Response struct {
+		Success        bool                  `json:"success"`
+		ErrMsg         string                `json:"err_msg,omitempty"`
+		PrizeNo        int                   `json:"prize_no"`
+		RevokedWinners []lottery.Participant `json:"revoked_winners"`
+	}
+
+	var (
+		errMsg string
+		req    Request
+	)
+
+	defer func() {
+		resp := Response{}
+
+		if errMsg == "" {
+			resp.Success = true
+			resp.PrizeNo = req.PrizeNo
+			resp.RevokedWinners = req.RevokedWinners
+		} else {
+			resp.Success = false
+			resp.ErrMsg = errMsg
+			log.Printf("revoke(): error: %v", errMsg)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "    ")
+		if err := enc.Encode(&resp); err != nil {
+			log.Printf("revoke() encode JSON error: %v", err)
+			return
+		}
+	}()
+
+	if r.Method != "POST" {
+		errMsg = fmt.Sprintf("revoke(): HTTP method is NOT POST(%v)", r.Method)
+		return
+	}
+
+	dec := json.NewDecoder(r.Body)
+	if err := dec.Decode(&req); err != nil {
+		errMsg = fmt.Sprintf("revoke(): decode JSON error: %v", err)
+		return
+	}
+
+	if err := lott.Revoke(req.PrizeNo, req.RevokedWinners); err != nil {
+		errMsg = fmt.Sprintf("revoke(): Revoke() error: %v", err)
 		return
 	}
 }
@@ -264,6 +319,9 @@ func main() {
 
 	// Draw a prize.
 	http.HandleFunc("/draw", draw)
+
+	// Revoke winners.
+	http.HandleFunc("/revoke", revoke)
 
 	err = http.ListenAndServe(config.Addr, nil)
 	if err != nil {
