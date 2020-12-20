@@ -215,6 +215,69 @@ func revoke(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// redraw re-draws a prize with given prize no and amount.
+func redraw(w http.ResponseWriter, r *http.Request) {
+	type Request struct {
+		PrizeNo int `json:"prize_no"`
+		Amount  int `json:"amount"`
+	}
+
+	type Response struct {
+		Success bool                  `json:"success"`
+		ErrMsg  string                `json:"err_msg,omitempty"`
+		PrizeNo int                   `json:"prize_no"`
+		Amount  int                   `json:"amount"`
+		Winners []lottery.Participant `json:"winners"`
+	}
+
+	var (
+		errMsg  string
+		req     Request
+		winners []lottery.Participant
+	)
+
+	defer func() {
+		resp := Response{}
+
+		if errMsg == "" {
+			resp.Success = true
+			resp.PrizeNo = req.PrizeNo
+			resp.Amount = req.Amount
+			resp.Winners = winners
+		} else {
+			resp.Success = false
+			resp.ErrMsg = errMsg
+			log.Printf("redraw(): error: %v", errMsg)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "    ")
+		if err := enc.Encode(&resp); err != nil {
+			log.Printf("redraw() encode JSON error: %v", err)
+			return
+		}
+	}()
+
+	if r.Method != "POST" {
+		errMsg = fmt.Sprintf("redraw(): HTTP method is NOT POST(%v)", r.Method)
+		return
+	}
+
+	dec := json.NewDecoder(r.Body)
+	if err := dec.Decode(&req); err != nil {
+		errMsg = fmt.Sprintf("redraw(): decode JSON error: %v", err)
+		return
+	}
+
+	winners, err := lott.Redraw(req.PrizeNo, req.Amount)
+	if err != nil {
+		errMsg = fmt.Sprintf("redraw(): Redraw() error: %v", err)
+		return
+	}
+}
+
 // GetCurrentExecDir gets the current executable path.
 func GetCurrentExecDir() (dir string, err error) {
 	p, err := exec.LookPath(os.Args[0])
@@ -322,6 +385,9 @@ func main() {
 
 	// Revoke winners.
 	http.HandleFunc("/revoke", revoke)
+
+	// Redraw a prize.
+	http.HandleFunc("/redraw", redraw)
 
 	err = http.ListenAndServe(config.Addr, nil)
 	if err != nil {
