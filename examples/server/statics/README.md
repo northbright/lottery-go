@@ -1,26 +1,15 @@
-# luckyming (luckyming-frontend)
+# Quasar App as Front-End
 
-luckming
+## Steps
+1. Install [Quasar Cli](https://quasar.dev/quasar-cli/installation)
+2. Run `quasar create` in `statics` folder
+3. Follow the instructions to create Quasar project
+   * Input project names
+   * Install components(Axios is required)
+4. After `quasar create` command done, modify `src/router/routes.js`
+   
+   Replace `MainLayout.vue` with `MyLayout.vue` for `component`:
+   
+   `component: () => import('layouts/MyLayout.vue')`
 
-## Install the dependencies
-```bash
-npm install
-```
-
-### Start the app in development mode (hot-code reloading, error reporting, etc.)
-```bash
-quasar dev
-```
-
-### Lint the files
-```bash
-npm run lint
-```
-
-### Build the app for production
-```bash
-quasar build
-```
-
-### Customize the configuration
-See [Configuring quasar.conf.js](https://quasar.dev/quasar-cli/quasar-conf-js).
+5. Run `quasar build` to build the source code
