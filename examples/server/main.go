@@ -40,8 +40,8 @@ func getLottery(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// getAvailableParticipants returns the available participants for given prize no.
-func getAvailableParticipants(w http.ResponseWriter, r *http.Request) {
+// availableParticipants returns the available participants for given prize no.
+func availableParticipants(w http.ResponseWriter, r *http.Request) {
 	type Request struct {
 		PrizeNo int `json:"prize_no"`
 	}
@@ -69,7 +69,7 @@ func getAvailableParticipants(w http.ResponseWriter, r *http.Request) {
 		} else {
 			resp.Success = false
 			resp.ErrMsg = errMsg
-			log.Printf("getAvailableParticipants(): error: %v", errMsg)
+			log.Printf("availableParticipants(): error: %v", errMsg)
 		}
 
 		w.Header().Set("Content-Type", "application/json")
@@ -77,7 +77,7 @@ func getAvailableParticipants(w http.ResponseWriter, r *http.Request) {
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "    ")
 		if err := enc.Encode(&resp); err != nil {
-			log.Printf("getAvailableParticipants() encode JSON error: %v", err)
+			log.Printf("availableParticipants() encode JSON error: %v", err)
 			return
 		}
 	}()
@@ -96,8 +96,8 @@ func getAvailableParticipants(w http.ResponseWriter, r *http.Request) {
 	availableParticipants = lott.AvailableParticipants(req.PrizeNo)
 }
 
-// getWinners returns the winners of a prize.
-func getWinners(w http.ResponseWriter, r *http.Request) {
+// winners returns the winners of a prize.
+func winners(w http.ResponseWriter, r *http.Request) {
 	type Request struct {
 		PrizeNo int `json:"prize_no"`
 	}
@@ -125,7 +125,7 @@ func getWinners(w http.ResponseWriter, r *http.Request) {
 		} else {
 			resp.Success = false
 			resp.ErrMsg = errMsg
-			log.Printf("getWinners(): error: %v", errMsg)
+			log.Printf("winners(): error: %v", errMsg)
 		}
 
 		w.Header().Set("Content-Type", "application/json")
@@ -133,18 +133,18 @@ func getWinners(w http.ResponseWriter, r *http.Request) {
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "    ")
 		if err := enc.Encode(&resp); err != nil {
-			log.Printf("getWinners() encode JSON error: %v", err)
+			log.Printf("winners() encode JSON error: %v", err)
 			return
 		}
 	}()
 	if r.Method != "POST" {
-		errMsg = fmt.Sprintf("getWinners(): HTTP method is NOT POST(%v)", r.Method)
+		errMsg = fmt.Sprintf("winners(): HTTP method is NOT POST(%v)", r.Method)
 		return
 	}
 
 	dec := json.NewDecoder(r.Body)
 	if err := dec.Decode(&req); err != nil {
-		errMsg = fmt.Sprintf("getWinners(): decode JSON error: %v", err)
+		errMsg = fmt.Sprintf("winners(): decode JSON error: %v", err)
 		return
 	}
 
@@ -407,7 +407,7 @@ func main() {
 			return
 		}
 		log.Printf("load participants CSV successfully")
-		log.Printf("participants: %v", lott.Participants)
+		log.Printf("participants: %v", lott.Participants())
 
 		// Load prizes.
 		if err := lott.LoadPrizesCSVFile(prizesCSV); err != nil {
@@ -415,7 +415,7 @@ func main() {
 			return
 		}
 		log.Printf("load prizes CSV successfully")
-		log.Printf("prizes: %v", lott.Prizes)
+		log.Printf("prizes: %v", lott.Prizes())
 
 		// Load blacklists.
 		if err := lott.LoadBlacklistsJSONFile(blacklistsJSON); err != nil {
@@ -423,7 +423,7 @@ func main() {
 			return
 		}
 		log.Printf("load blacklists JSON successfully")
-		log.Printf("blacklists: %v", lott.Blacklists)
+		log.Printf("blacklists: %v", lott.Blacklists())
 	}
 
 	// Serve Static Files.
@@ -433,10 +433,10 @@ func main() {
 	http.HandleFunc("/lottery", getLottery)
 
 	// Get available participants.
-	http.HandleFunc("/available_participants", getAvailableParticipants)
+	http.HandleFunc("/available_participants", availableParticipants)
 
 	// Get winners.
-	http.HandleFunc("/winners", getWinners)
+	http.HandleFunc("/winners", winners)
 
 	// Draw a prize.
 	http.HandleFunc("/draw", draw)
