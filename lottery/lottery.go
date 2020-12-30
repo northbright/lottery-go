@@ -164,7 +164,7 @@ func prizeMapToSlice(m map[int]Prize) []Prize {
 	}
 
 	sort.Slice(s, func(i, j int) bool {
-		return s[i] < s[j]
+		return s[i] > s[j]
 	})
 
 	for _, prizeNo := range s {
