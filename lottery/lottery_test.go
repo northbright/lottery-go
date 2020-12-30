@@ -23,7 +23,8 @@ func Example() {
 	log.Printf("LoadParticipantsCSVFile() successfully")
 
 	log.Printf("participants:")
-	for _, p := range l.Participants {
+	participants := l.Participants()
+	for _, p := range participants {
 		log.Printf("ID: %v, Name: %v", p.ID, p.Name)
 	}
 
@@ -34,8 +35,9 @@ func Example() {
 	log.Printf("LoadPrizesCSVFile() successfully")
 
 	log.Printf("prizes:")
-	for prizeNo, prize := range l.Prizes {
-		log.Printf("no: %v, name: %v, count: %v, desc: %v", prizeNo, prize.Name, prize.Amount, prize.Desc)
+	prizes := l.Prizes()
+	for _, prize := range prizes {
+		log.Printf("no: %v, name: %v, count: %v, desc: %v", prize.No, prize.Name, prize.Amount, prize.Desc)
 	}
 
 	if err := l.LoadBlacklistsJSONFile(blacklistsJSON); err != nil {
@@ -45,12 +47,13 @@ func Example() {
 	log.Printf("LoadBlacklistsJSONFile() successfully")
 
 	log.Printf("blacklists:")
-	for maxPrizeNo, blacklist := range l.Blacklists {
-		log.Printf("max prize no: %v, IDs: %v", maxPrizeNo, blacklist.IDs)
+	blacklists := l.Blacklists()
+	for _, blacklist := range blacklists {
+		log.Printf("min prize no: %v, IDs: %v", blacklist.MinPrizeNo, blacklist.IDs)
 	}
 
 	// Draw prize no.5.
-	log.Printf("draw prize no.5: %v", l.Prizes[5])
+	log.Printf("draw prize no.5: %v", l.Prize(5))
 	winners, err := l.Draw(5)
 	if err != nil {
 		log.Printf("draw() error: %v", err)
@@ -67,7 +70,7 @@ func Example() {
 	}
 	log.Printf("revoke winners of prize no.5: %v successfully", revokedWinners)
 
-	log.Printf("re-draw prize no.5(amount = 2): %v", l.Prizes[5])
+	log.Printf("re-draw prize no.5(amount = 2): %v", l.Prize(5))
 	newWinners, err := l.Redraw(5, 2)
 	if err != nil {
 		log.Printf("Redraw() error: %v", err)
@@ -76,11 +79,11 @@ func Example() {
 	log.Printf("new winners of prize no.5: %v", newWinners)
 
 	// Get complete updated winners.
-	winners = l.GetWinners(5)
+	winners = l.Winners(5)
 	log.Printf("winners of prize no.5: %v", winners)
 
 	// Draw a prize no.4.
-	log.Printf("draw prize no.4: %v", l.Prizes[4])
+	log.Printf("draw prize no.4: %v", l.Prize(4))
 	winners, err = l.Draw(4)
 	if err != nil {
 		log.Printf("draw() error: %v", err)
@@ -90,7 +93,7 @@ func Example() {
 
 	// Get all winners.
 	log.Printf("get all winners:")
-	allWinners := l.GetAllWinners()
+	allWinners := l.AllWinners()
 	for no, winners := range allWinners {
 		log.Printf("prize no %v: %v", no, winners)
 	}
@@ -128,7 +131,7 @@ func Example() {
 	log.Printf("load data successfully")
 
 	// Get all winners again.
-	allWinners = l.GetAllWinners()
+	allWinners = l.AllWinners()
 	for no, winners := range allWinners {
 		log.Printf("prize no %v: %v", no, winners)
 	}
