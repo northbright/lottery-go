@@ -84,7 +84,7 @@ export default {
       leftDrawerOpen: false,
       currentPrizeContent: "",
       prizes: [],
-      prizeNo: 0,
+      prizeIndex: 0,
       prizesDone: [],
       winners: [],
       oldWinnerIndexes: [],
@@ -117,6 +117,7 @@ export default {
         .get("/prizes")
         .then((response) => {
           this.prizes = response.data.prizes;
+          selectPrize(0);
           console.log(response);
         })
         .catch(() => {
@@ -149,7 +150,7 @@ export default {
           case "get_winners":
             if (res.winners.length === 0) {
               this.winners = [];
-              var prizeNum = this.prizes[this.prizeNo].num;
+              var prizeNum = this.prizes[this.prizeIndex].num;
 
               for (var i = 0; i < prizeNum; i++) {
                 this.winners[i] = { id: "", name: "?" };
@@ -175,18 +176,18 @@ export default {
     },
 
     selectPrize(index) {
-      this.prizeNo = index;
+      this.prizeIndex = index;
       this.currentPrizeContent =
-        this.prizes[this.prizeNo].name +
+        this.prizes[index].name +
         " -- " +
-        this.prizes[this.prizeNo].desc;
+        this.prizes[index].desc + "(" + this.prizes[index].amount + " 人)";
 
       console.log("prize: " + index + "selected");
       var action = { name: "get_winners", prize_index: index };
       this.conn.send(JSON.stringify(action));
       this.oldWinnerIndexes = [];
 
-      var prizeNum = this.prizes[index].num;
+      var prizeNum = this.prizes[index].amount;
 
       if (prizeNum >= 20) {
         this.fontSize = "35px";
@@ -236,7 +237,7 @@ export default {
     },
 
     getPrizeItemClass(index) {
-      if (index === this.prizeNo) {
+      if (index === this.prizeIndex) {
         return "bg-red";
       } else {
         return this.prizesDone[index] ? "bg-pink-2" : "bg-gray";
@@ -254,7 +255,7 @@ export default {
 
       this.started = !this.started;
 
-      action.prize_index = this.prizeNo;
+      action.prize_index = this.prizeIndex;
       action.old_winner_indexes = this.oldWinnerIndexes;
       console.log(action);
       this.conn.send(JSON.stringify(action));
