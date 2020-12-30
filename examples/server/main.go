@@ -70,7 +70,7 @@ func prizes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	prizes = lott.Prizes()
+	prizes = lott.Prizes(true)
 }
 
 // availableParticipants returns the available participants for given prize no.
@@ -448,7 +448,7 @@ func main() {
 			return
 		}
 		log.Printf("load prizes CSV successfully")
-		log.Printf("prizes: %v", lott.Prizes())
+		log.Printf("prizes: %v", lott.Prizes(true))
 
 		// Load blacklists.
 		if err := lott.LoadBlacklistsJSONFile(blacklistsJSON); err != nil {

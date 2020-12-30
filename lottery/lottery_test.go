@@ -35,7 +35,7 @@ func Example() {
 	log.Printf("LoadPrizesCSVFile() successfully")
 
 	log.Printf("prizes:")
-	prizes := l.Prizes()
+	prizes := l.Prizes(false)
 	for _, prize := range prizes {
 		log.Printf("no: %v, name: %v, count: %v, desc: %v", prize.No, prize.Name, prize.Amount, prize.Desc)
 	}

@@ -152,7 +152,7 @@ func (l *Lottery) LoadPrizesCSVFile(file string) error {
 	return l.LoadPrizesCSV(f)
 }
 
-func prizeMapToSlice(m map[int]Prize) []Prize {
+func prizeMapToSlice(m map[int]Prize, descOrder bool) []Prize {
 	var (
 		s      []int
 		prizes []Prize
@@ -164,7 +164,11 @@ func prizeMapToSlice(m map[int]Prize) []Prize {
 	}
 
 	sort.Slice(s, func(i, j int) bool {
-		return s[i] > s[j]
+		if descOrder {
+			return s[i] > s[j]
+		} else {
+			return s[i] < s[j]
+		}
 	})
 
 	for _, prizeNo := range s {
@@ -174,11 +178,11 @@ func prizeMapToSlice(m map[int]Prize) []Prize {
 	return prizes
 }
 
-func (l *Lottery) Prizes() []Prize {
+func (l *Lottery) Prizes(descOrder bool) []Prize {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
-	return prizeMapToSlice(l.prizes)
+	return prizeMapToSlice(l.prizes, descOrder)
 }
 
 func (l *Lottery) SetBlacklist(minPrizeNo int, IDs []string) {
