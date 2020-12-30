@@ -5,6 +5,12 @@
 * How to build
   1. Install [Quasar Cli](https://quasar.dev/quasar-cli/installation)
   2. Run `quasar create` in `statics` folder
+     
+     ```
+     cd ./statics
+     quasar create
+     ```
+
   3. Follow the instructions to create Quasar project
      * Input project names
      * Install components(Axios is required)
