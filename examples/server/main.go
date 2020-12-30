@@ -30,14 +30,47 @@ var (
 	lott             *lottery.Lottery
 )
 
-// getLottery returns the lottery data.
-func getLottery(w http.ResponseWriter, r *http.Request) {
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "    ")
-	if err := enc.Encode(&lott); err != nil {
-		log.Printf("getLottery() encode error: %v", err)
+// prizes returns the prizes.
+func prizes(w http.ResponseWriter, r *http.Request) {
+	type Response struct {
+		Success bool            `json:"success"`
+		ErrMsg  string          `json:"err_msg,omitempty"`
+		Prizes  []lottery.Prize `json:"prizes"`
+	}
+
+	var (
+		errMsg string
+		prizes []lottery.Prize
+	)
+
+	defer func() {
+		resp := Response{}
+
+		if errMsg == "" {
+			resp.Success = true
+			resp.Prizes = prizes
+		} else {
+			resp.Success = false
+			resp.ErrMsg = errMsg
+			log.Printf("prizes(): error: %v", errMsg)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "    ")
+		if err := enc.Encode(&resp); err != nil {
+			log.Printf("prizes() encode JSON error: %v", err)
+			return
+		}
+	}()
+
+	if r.Method != "GET" {
+		errMsg = fmt.Sprintf("prizes(): HTTP method is NOT GET(%v)", r.Method)
 		return
 	}
+
+	prizes = lott.Prizes()
 }
 
 // availableParticipants returns the available participants for given prize no.
@@ -429,8 +462,8 @@ func main() {
 	// Serve Static Files.
 	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir(staticFolderPath))))
 
-	// Get lottery data.
-	http.HandleFunc("/lottery", getLottery)
+	// Get prizes.
+	http.HandleFunc("/prizes", prizes)
 
 	// Get available participants.
 	http.HandleFunc("/available_participants", availableParticipants)
