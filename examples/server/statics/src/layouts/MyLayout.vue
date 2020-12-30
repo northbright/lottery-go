@@ -74,202 +74,191 @@
 </template>
 
 <script>
-import axios from 'axios'
+import axios from "axios";
 
 export default {
-  name: 'MyLayout',
+  name: "MyLayout",
 
-  data () {
+  data() {
     return {
       leftDrawerOpen: false,
-      currentPrizeContent: '',
+      currentPrizeContent: "",
       prizes: [],
       prizeNo: 0,
       prizesDone: [],
       winners: [],
       oldWinnerIndexes: [],
-      url: '',
+      url: "",
       conn: {},
       started: false,
-      fontSize: '35px'
-    }
+      fontSize: "35px",
+    };
   },
 
-  created () {
-    console.log('created()')
-    // this.initWebSocket();
-    this.loadData()
+  created() {
+    console.log("created()");
+    this.getPrizes();
   },
 
-  mounted () {
-    var _this = this
-    document.onkeydown = function (e) {
-      const key = e.keyCode
+  mounted() {
+    var _this = this;
+    document.onkeydown = function(e) {
+      const key = e.keyCode;
       if (key === 13) {
-        window.event.preventDefault()
-        _this.startStop()
+        window.event.preventDefault();
+        _this.startStop();
       }
-    }
+    };
   },
 
   methods: {
-    loadData () {
+    getPrizes() {
       axios
-        .get('/get-ws-url')
-        .then(response => {
-          this.url = response.data
-          console.log(response)
-
-          console.log(this.url)
-          this.initWebSocket(this.url)
+        .get("/prizes")
+        .then((response) => {
+          this.prizes = response.data.prizes;
+          console.log(response);
         })
         .catch(() => {
           this.$q.notify({
-            color: 'negative',
-            position: 'top',
-            message: 'Loading failed',
-            icon: 'report_problem'
-          })
-        })
+            color: "negative",
+            position: "top",
+            message: "Loading failed",
+            icon: "report_problem",
+          });
+        });
     },
 
-    initWebSocket (url) {
-      console.log('initWebSocket()')
-      this.conn = new WebSocket(url)
-      this.conn.onopen = this.webSocketOnOpen
-      this.conn.onmessage = this.webSocketOnMessage
+    webSocketOnOpen() {
+      console.log("WebSocket on open");
+      var action = { name: "get_prizes" };
+      this.conn.send(JSON.stringify(action));
     },
 
-    webSocketOnOpen () {
-      console.log('WebSocket on open')
-      var action = { name: 'get_prizes' }
-      this.conn.send(JSON.stringify(action))
-    },
-
-    webSocketOnMessage (msg) {
-      var res = JSON.parse(msg.data)
-      console.log(res)
+    webSocketOnMessage(msg) {
+      var res = JSON.parse(msg.data);
+      console.log(res);
       if (res.success === true) {
-        var action = res.action
+        var action = res.action;
 
         switch (action.name) {
-          case 'get_prizes':
-            this.prizes = res.prizes
-            break
+          case "get_prizes":
+            this.prizes = res.prizes;
+            break;
 
-          case 'get_winners':
+          case "get_winners":
             if (res.winners.length === 0) {
-              this.winners = []
-              var prizeNum = this.prizes[this.prizeNo].num
+              this.winners = [];
+              var prizeNum = this.prizes[this.prizeNo].num;
 
               for (var i = 0; i < prizeNum; i++) {
-                this.winners[i] = { id: '', name: '?' }
+                this.winners[i] = { id: "", name: "?" };
               }
             } else {
-              this.winners = res.winners
+              this.winners = res.winners;
             }
 
-            break
+            break;
 
-          case 'start':
-            this.started = true
-            this.winners = res.winners
-            break
+          case "start":
+            this.started = true;
+            this.winners = res.winners;
+            break;
 
-          case 'stop':
-            this.started = false
-            this.winners = res.winners
-            this.prizesDone[res.action.prize_index] = true
-            break
+          case "stop":
+            this.started = false;
+            this.winners = res.winners;
+            this.prizesDone[res.action.prize_index] = true;
+            break;
         }
       }
     },
 
-    selectPrize (index) {
-      this.prizeNo = index
+    selectPrize(index) {
+      this.prizeNo = index;
       this.currentPrizeContent =
         this.prizes[this.prizeNo].name +
-        ' -- ' +
-        this.prizes[this.prizeNo].content
+        " -- " +
+        this.prizes[this.prizeNo].desc;
 
-      console.log('prize: ' + index + 'selected')
-      var action = { name: 'get_winners', prize_index: index }
-      this.conn.send(JSON.stringify(action))
-      this.oldWinnerIndexes = []
+      console.log("prize: " + index + "selected");
+      var action = { name: "get_winners", prize_index: index };
+      this.conn.send(JSON.stringify(action));
+      this.oldWinnerIndexes = [];
 
-      var prizeNum = this.prizes[index].num
+      var prizeNum = this.prizes[index].num;
 
       if (prizeNum >= 20) {
-        this.fontSize = '35px'
+        this.fontSize = "35px";
       } else if (prizeNum >= 10) {
-        this.fontSize = '50px'
+        this.fontSize = "50px";
       } else if (prizeNum >= 5) {
-        this.fontSize = '60px'
+        this.fontSize = "60px";
       } else if (prizeNum >= 2) {
-        this.fontSize = '70px'
+        this.fontSize = "70px";
       } else {
-        this.fontSize = '80px'
+        this.fontSize = "80px";
       }
     },
 
-    isCurrentWinnerSelected (index) {
-      var idx = this.oldWinnerIndexes.indexOf(index)
-      return idx !== -1
+    isCurrentWinnerSelected(index) {
+      var idx = this.oldWinnerIndexes.indexOf(index);
+      return idx !== -1;
     },
 
-    selectWinner (index) {
-      console.log(this.oldWinnerIndexes)
+    selectWinner(index) {
+      console.log(this.oldWinnerIndexes);
       if (this.isCurrentWinnerSelected(index)) {
-        var idx = this.oldWinnerIndexes.indexOf(index)
-        console.log('idx: ' + idx)
+        var idx = this.oldWinnerIndexes.indexOf(index);
+        console.log("idx: " + idx);
 
-        console.log('selected: before remove:')
-        console.log(this.oldWinnerIndexes)
+        console.log("selected: before remove:");
+        console.log(this.oldWinnerIndexes);
 
         // delete this.oldWinnerIndexes[idx];
-        this.oldWinnerIndexes.splice(idx, 1)
+        this.oldWinnerIndexes.splice(idx, 1);
 
-        console.log('selected: after remove:')
-        console.log(this.oldWinnerIndexes)
+        console.log("selected: after remove:");
+        console.log(this.oldWinnerIndexes);
       } else {
-        console.log('not selected: before push')
-        console.log(this.oldWinnerIndexes)
+        console.log("not selected: before push");
+        console.log(this.oldWinnerIndexes);
 
-        this.oldWinnerIndexes.push(index)
+        this.oldWinnerIndexes.push(index);
 
-        console.log('not selected: after push')
-        console.log(this.oldWinnerIndexes)
+        console.log("not selected: after push");
+        console.log(this.oldWinnerIndexes);
       }
     },
 
-    getButtonColor (index) {
-      return this.isCurrentWinnerSelected(index) ? 'purple' : 'red'
+    getButtonColor(index) {
+      return this.isCurrentWinnerSelected(index) ? "purple" : "red";
     },
 
-    getPrizeItemClass (index) {
+    getPrizeItemClass(index) {
       if (index === this.prizeNo) {
-        return 'bg-red'
+        return "bg-red";
       } else {
-        return this.prizesDone[index] ? 'bg-pink-2' : 'bg-gray'
+        return this.prizesDone[index] ? "bg-pink-2" : "bg-gray";
       }
     },
 
-    startStop () {
-      var action = {}
+    startStop() {
+      var action = {};
 
       if (!this.started) {
-        action.name = 'start'
+        action.name = "start";
       } else {
-        action.name = 'stop'
+        action.name = "stop";
       }
 
-      this.started = !this.started
+      this.started = !this.started;
 
-      action.prize_index = this.prizeNo
-      action.old_winner_indexes = this.oldWinnerIndexes
-      console.log(action)
-      this.conn.send(JSON.stringify(action))
-    }
-  }
-}
+      action.prize_index = this.prizeNo;
+      action.old_winner_indexes = this.oldWinnerIndexes;
+      console.log(action);
+      this.conn.send(JSON.stringify(action));
+    },
+  },
+};
 </script>
