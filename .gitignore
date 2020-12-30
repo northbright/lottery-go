@@ -22,3 +22,6 @@ config.json
 !*.gif
 # For Vue
 !*.vue
+# For Quasar App
+examples/server/statics/*
+!examples/server/statics/src/layouts/MyLayout.vue
