@@ -93,7 +93,7 @@ func getAvailableParticipants(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	availableParticipants = lott.GetAvailableParticipants(req.PrizeNo)
+	availableParticipants = lott.AvailableParticipants(req.PrizeNo)
 }
 
 // getWinners returns the winners of a prize.
@@ -148,7 +148,7 @@ func getWinners(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	winners = lott.GetWinners(req.PrizeNo)
+	winners = lott.Winners(req.PrizeNo)
 }
 
 // draw draws a prize and returns the winners.
