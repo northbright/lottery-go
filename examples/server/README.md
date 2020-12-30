@@ -13,7 +13,8 @@
 
   3. Follow the instructions to create Quasar project
      * Input project names
-     * Install components(Axios is required)
+     * Install Axios
+     * Select Prettier as the linter for ESLint
   4. After `quasar create` command done, modify `src/router/routes.js`
 
      Replace `MainLayout.vue` with `MyLayout.vue` for `component`:
