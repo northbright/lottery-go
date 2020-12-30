@@ -12,7 +12,6 @@
 !*.csv
 !.travis.yml
 !*.pem
-config.json
 # For HTML
 !*.html
 !*.js
