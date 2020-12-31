@@ -21,7 +21,24 @@
 
      `component: () => import('layouts/MyLayout.vue')`
 
-  5. Run `quasar build` to build the source code
+  5. [Install Notify Quasar Plugin](https://quasar.dev/quasar-plugins/notify#Installation)
+
+     ```
+     // quasar.conf.js
+
+     return {
+       framework: {
+         plugins: [
+           'Notify'
+         ],
+         config: {
+           notify: { /* look at QUASARCONFOPTIONS from the API card (bottom of page) */ }
+         }
+       }
+     }
+     ```
+
+  6. Run `quasar build` to build the source code
      * It will put the release under `/dist/spa`
 
 ## Back-End
