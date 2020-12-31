@@ -66,7 +66,7 @@
           :key="index"
           :size="fontSize"
           @click="selectWinner(index)"
-          :color="red"
+          color="red"
         ></q-btn>
       </div>
     </q-page-container>
