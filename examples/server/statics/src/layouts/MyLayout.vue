@@ -117,10 +117,10 @@ export default {
         .get("/prizes")
         .then((response) => {
           this.prizes = response.data.prizes;
-          selectPrize(0);
           console.log(response);
         })
-        .catch(() => {
+        .catch((error) => {
+          console.log("getPrizes() error: " + error);
           this.$q.notify({
             color: "negative",
             position: "top",
