@@ -180,7 +180,10 @@ export default {
       this.currentPrizeContent =
         this.prizes[index].name +
         " -- " +
-        this.prizes[index].desc + "(" + this.prizes[index].amount + " 人)";
+        this.prizes[index].desc +
+        "(" +
+        this.prizes[index].amount +
+        " 人)";
 
       console.log("prize: " + index + "selected");
       var action = { name: "get_winners", prize_index: index };
