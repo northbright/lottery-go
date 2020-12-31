@@ -61,12 +61,12 @@
         class="q-gutter-xl fit row wrap justify-around content-center bg-pink-1"
       >
         <q-btn
-          v-for="(winner, index) in this.winners"
+          v-for="(winner, index) in winners"
           :label="winner.name"
           :key="index"
           :size="fontSize"
           @click="selectWinner(index)"
-          :color="getButtonColor(index)"
+          :color="red"
         ></q-btn>
       </div>
     </q-page-container>
@@ -82,23 +82,19 @@ export default {
   data() {
     return {
       leftDrawerOpen: false,
+      currentPrizeIndex: 0,
       currentPrizeContent: "",
       prizes: [],
-      prizeIndex: 0,
-      prizesDone: [],
+      availableParticipants: [],
       winners: [],
-      oldWinnerIndexes: [],
-      url: "",
-      conn: {},
       started: false,
+      drawing: false,
       fontSize: "35px",
+      timer: {},
     };
   },
 
-  created() {
-    console.log("created()");
-    this.getPrizes();
-  },
+  created() {},
 
   mounted() {
     var _this = this;
@@ -109,6 +105,8 @@ export default {
         _this.startStop();
       }
     };
+
+    this.getPrizes();
   },
 
   methods: {
@@ -120,63 +118,94 @@ export default {
           console.log(response);
         })
         .catch((error) => {
-          console.log("getPrizes() error: " + error);
+          var errMsg = "getPrizes() error: " + error;
           this.$q.notify({
             color: "negative",
             position: "top",
-            message: "Loading failed",
+            message: errMsg,
             icon: "report_problem",
           });
+          console.log(errMsg);
         });
     },
 
-    webSocketOnOpen() {
-      console.log("WebSocket on open");
-      var action = { name: "get_prizes" };
-      this.conn.send(JSON.stringify(action));
+    getAvailableParticipants(prizeNo) {
+      axios
+        .post("/available_participants", {
+          prize_no: prizeNo,
+        })
+        .then((response) => {
+          console.log(response);
+          this.availableParticipants = response.data.available_participants;
+          console.log(this.availableParticipants);
+        })
+        .catch(function(error) {
+          var errMsg = "getAvailableParticipants() error: " + error;
+          this.$q.notify({
+            color: "negative",
+            position: "top",
+            message: errMsg,
+            icon: "report_problem",
+          });
+          console.log(errMsg);
+        });
     },
 
-    webSocketOnMessage(msg) {
-      var res = JSON.parse(msg.data);
-      console.log(res);
-      if (res.success === true) {
-        var action = res.action;
-
-        switch (action.name) {
-          case "get_prizes":
-            this.prizes = res.prizes;
-            break;
-
-          case "get_winners":
-            if (res.winners.length === 0) {
-              this.winners = [];
-              var prizeNum = this.prizes[this.prizeIndex].num;
-
-              for (var i = 0; i < prizeNum; i++) {
-                this.winners[i] = { id: "", name: "?" };
-              }
-            } else {
-              this.winners = res.winners;
+    getWinners(index) {
+      axios
+        .post("/winners", {
+          prize_no: this.prizes[index].no,
+        })
+        .then((response) => {
+          console.log(response);
+          if (response.data.winners.length === 0) {
+            var size = this.prizes[index].amount;
+            this.winners = [];
+            for (var i = 0; i < size; i++) {
+              this.winners.push({ id: "?", name: "?" });
             }
+          } else {
+            this.winners = response.data.winners;
+          }
+          console.log(this.winners);
+        })
+        .catch(function(error) {
+          var errMsg = "getPrizes() error: " + error;
+          this.$q.notify({
+            color: "negative",
+            position: "top",
+            message: errMsg,
+            icon: "report_problem",
+          });
+          console.log(errMsg);
+        });
+    },
 
-            break;
-
-          case "start":
-            this.started = true;
-            this.winners = res.winners;
-            break;
-
-          case "stop":
-            this.started = false;
-            this.winners = res.winners;
-            this.prizesDone[res.action.prize_index] = true;
-            break;
-        }
-      }
+    draw(prizeNo) {
+      axios
+        .post("/draw", {
+          prize_no: prizeNo,
+        })
+        .then((response) => {
+          console.log(response);
+          this.winners = response.data.winners;
+          console.log(this.winners);
+        })
+        .catch(function(error) {
+          var errMsg = "draw() error: " + error;
+          this.$q.notify({
+            color: "negative",
+            position: "top",
+            message: errMsg,
+            icon: "report_problem",
+          });
+          console.log(errMsg);
+        });
     },
 
     selectPrize(index) {
-      this.prizeIndex = index;
+      // Update current prize index and content.
+      this.currentPrizeIndex = index;
       this.currentPrizeContent =
         this.prizes[index].name +
         " -- " +
@@ -185,11 +214,7 @@ export default {
         this.prizes[index].amount +
         " 人)";
 
-      console.log("prize: " + index + "selected");
-      var action = { name: "get_winners", prize_index: index };
-      this.conn.send(JSON.stringify(action));
-      this.oldWinnerIndexes = [];
-
+      // Update font accoding to the amount of the prize.
       var prizeNum = this.prizes[index].amount;
 
       if (prizeNum >= 20) {
@@ -203,6 +228,12 @@ export default {
       } else {
         this.fontSize = "80px";
       }
+
+      // get available participants.
+      this.getAvailableParticipants(this.prizes[index].no);
+
+      // get winners.
+      this.getWinners(index);
     },
 
     isCurrentWinnerSelected(index) {
@@ -210,58 +241,74 @@ export default {
       return idx !== -1;
     },
 
-    selectWinner(index) {
-      console.log(this.oldWinnerIndexes);
-      if (this.isCurrentWinnerSelected(index)) {
-        var idx = this.oldWinnerIndexes.indexOf(index);
-        console.log("idx: " + idx);
-
-        console.log("selected: before remove:");
-        console.log(this.oldWinnerIndexes);
-
-        // delete this.oldWinnerIndexes[idx];
-        this.oldWinnerIndexes.splice(idx, 1);
-
-        console.log("selected: after remove:");
-        console.log(this.oldWinnerIndexes);
-      } else {
-        console.log("not selected: before push");
-        console.log(this.oldWinnerIndexes);
-
-        this.oldWinnerIndexes.push(index);
-
-        console.log("not selected: after push");
-        console.log(this.oldWinnerIndexes);
-      }
-    },
+    selectWinner(index) {},
 
     getButtonColor(index) {
       return this.isCurrentWinnerSelected(index) ? "purple" : "red";
     },
 
-    getPrizeItemClass(index) {
-      if (index === this.prizeIndex) {
+    prizeHasWinners() {
+      return this.winners.length === undefined || this.winners.length === 0
+        ? false
+        : true;
+    },
+
+    getPrizeItemClass(prizeIndex) {
+      if (prizeIndex === this.currentPrizeIndex) {
         return "bg-red";
       } else {
-        return this.prizesDone[index] ? "bg-pink-2" : "bg-gray";
+        return this.prizeHasWinners() ? "bg-pink-2" : "bg-gray";
       }
     },
 
     startStop() {
-      var action = {};
-
       if (!this.started) {
-        action.name = "start";
+        // Generate random winners
+        this.timer = setTimeout(() => {
+          for (var i = 0; i < this.prizes[this.currentPrizeIndex].amount; i++) {
+            this.winners[i].id = i;
+            this.winners[i].name = i;
+          }
+        }, 10);
+        this.started = true;
       } else {
-        action.name = "stop";
+        if (this.drawing) {
+          return;
+        }
+
+        clearTimeout(this.timer);
+
+        axios
+          .post("/draw", {
+            prize_no: this.prizes[this.currentPrizeIndex].no,
+          })
+          .then((response) => {
+            console.log(response);
+
+            if (response.data.success) {
+              this.winners = response.data.winners;
+            } else {
+              this.winners = [];
+            }
+
+            console.log(this.winners);
+            this.drawing = false;
+            this.started = false;
+          })
+          .catch(function(error) {
+            var errMsg = "draw error: " + error;
+            this.$q.notify({
+              color: "negative",
+              position: "top",
+              message: errMsg,
+              icon: "report_problem",
+            });
+            console.log(errMsg);
+            this.drawing = false;
+            this.started = false;
+          });
+        this.drawing = true;
       }
-
-      this.started = !this.started;
-
-      action.prize_index = this.prizeIndex;
-      action.old_winner_indexes = this.oldWinnerIndexes;
-      console.log(action);
-      this.conn.send(JSON.stringify(action));
     },
   },
 };
