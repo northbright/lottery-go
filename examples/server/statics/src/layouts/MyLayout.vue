@@ -110,22 +110,72 @@ export default {
   },
 
   methods: {
+    notify(msg) {
+      this.$q.notify({
+        color: "purple",
+        message: msg,
+      });
+    },
+
+    getRandomInt(min, max) {
+      min = Math.ceil(min);
+      max = Math.floor(max);
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    },
+
+    getRandomFakeWinners(availableParticipants, amount) {
+      if (availableParticipants.length <= 0) {
+        return [];
+      }
+
+      if (amount <= 0) {
+        return [];
+      }
+
+      var newAmount =
+        availableParticipants.length < amount
+          ? availableParticipants.length
+          : amount;
+      var newAvailableParticipants = availableParticipants;
+
+      var fakeWinnerIndexes = [];
+      var fakeWinners = [];
+
+      while (fakeWinnerIndexes.length < newAmount) {
+        var minIndex = 0;
+        var maxIndex = newAvailableParticipants.length - 1;
+
+        var index = this.getRandomInt(minIndex, maxIndex);
+        fakeWinnerIndexes.push(index);
+
+        // Remove winner from available participants.
+        newAvailableParticipants = newAvailableParticipants.filter(
+          (item) => item !== index
+        );
+      }
+
+      for (var i = 0; i < fakeWinnerIndexes.length; i++) {
+        var index = fakeWinnerIndexes[i];
+        fakeWinners.push(this.availableParticipants[index]);
+      }
+
+      return fakeWinners;
+    },
+
     getPrizes() {
       axios
         .get("/prizes")
         .then((response) => {
-          this.prizes = response.data.prizes;
-          console.log(response);
+          if (response.data.success) {
+            this.prizes = response.data.prizes;
+          } else {
+            var errMsg = "/prizes error: " + response.data.err_msg;
+            this.notify(errMsg);
+          }
         })
-        .catch((error) => {
-          var errMsg = "getPrizes() error: " + error;
-          this.$q.notify({
-            color: "negative",
-            position: "top",
-            message: errMsg,
-            icon: "report_problem",
-          });
-          console.log(errMsg);
+        .catch((e) => {
+          var errMsg = "/prizes axios error: " + e;
+          this.notify(errMsg);
         });
     },
 
@@ -135,19 +185,17 @@ export default {
           prize_no: prizeNo,
         })
         .then((response) => {
-          console.log(response);
-          this.availableParticipants = response.data.available_participants;
-          console.log(this.availableParticipants);
+          if (response.data.success) {
+            this.availableParticipants = response.data.available_participants;
+          } else {
+            var errMsg =
+              "/available_participants error: " + response.data.err_msg;
+            this.notify(errMsg);
+          }
         })
-        .catch(function(error) {
-          var errMsg = "getAvailableParticipants() error: " + error;
-          this.$q.notify({
-            color: "negative",
-            position: "top",
-            message: errMsg,
-            icon: "report_problem",
-          });
-          console.log(errMsg);
+        .catch((e) => {
+          var errMsg = "/available_participants axios error: " + e;
+          this.notify(errMsg);
         });
     },
 
@@ -157,49 +205,56 @@ export default {
           prize_no: this.prizes[index].no,
         })
         .then((response) => {
-          console.log(response);
-          if (response.data.winners.length === 0) {
+          if (response.data.success) {
+            this.winners = response.data.winners;
+          } else {
+            var errMsg = "/winners error: " + response.data.err_msg;
+            this.notify(errMsg);
+          }
+        })
+        .catch((e) => {
+          var errMsg = "/winners axios error: " + e;
+          this.notify(errMsg);
+        })
+        .then(() => {
+          if (this.winners.length === 0) {
             var size = this.prizes[index].amount;
             this.winners = [];
             for (var i = 0; i < size; i++) {
               this.winners.push({ id: "?", name: "?" });
             }
-          } else {
-            this.winners = response.data.winners;
           }
-          console.log(this.winners);
-        })
-        .catch(function(error) {
-          var errMsg = "getPrizes() error: " + error;
-          this.$q.notify({
-            color: "negative",
-            position: "top",
-            message: errMsg,
-            icon: "report_problem",
-          });
-          console.log(errMsg);
         });
     },
 
     draw(prizeNo) {
+      if (this.drawing) {
+        var msg = "is drawing...please wait";
+        this.notify(msg);
+        return;
+      }
+
+      this.drawing = true;
+
       axios
         .post("/draw", {
           prize_no: prizeNo,
         })
         .then((response) => {
-          console.log(response);
-          this.winners = response.data.winners;
-          console.log(this.winners);
+          if (response.data.success) {
+            this.winners = response.data.winners;
+          } else {
+            var errMsg = "/draw error: " + response.data.err_msg;
+            this.notify(errMsg);
+          }
         })
-        .catch(function(error) {
-          var errMsg = "draw() error: " + error;
-          this.$q.notify({
-            color: "negative",
-            position: "top",
-            message: errMsg,
-            icon: "report_problem",
-          });
-          console.log(errMsg);
+        .catch((e) => {
+          var errMsg = "/draw axios error: " + e;
+          this.notify(errMsg);
+        })
+        .then(() => {
+          this.started = false;
+          this.drawing = false;
         });
     },
 
@@ -264,50 +319,19 @@ export default {
     startStop() {
       if (!this.started) {
         // Generate random winners
-        this.timer = setTimeout(() => {
-          for (var i = 0; i < this.prizes[this.currentPrizeIndex].amount; i++) {
-            this.winners[i].id = i;
-            this.winners[i].name = i;
-          }
-        }, 10);
+        this.timer = setInterval(() => {
+          var amount = this.prizes[this.currentPrizeIndex].amount;
+          this.winners = this.getRandomFakeWinners(
+            this.availableParticipants,
+            amount
+          );
+          console.log(this.winners);
+        }, 100);
         this.started = true;
       } else {
-        if (this.drawing) {
-          return;
-        }
+        clearInterval(this.timer);
 
-        clearTimeout(this.timer);
-
-        axios
-          .post("/draw", {
-            prize_no: this.prizes[this.currentPrizeIndex].no,
-          })
-          .then((response) => {
-            console.log(response);
-
-            if (response.data.success) {
-              this.winners = response.data.winners;
-            } else {
-              this.winners = [];
-            }
-
-            console.log(this.winners);
-            this.drawing = false;
-            this.started = false;
-          })
-          .catch(function(error) {
-            var errMsg = "draw error: " + error;
-            this.$q.notify({
-              color: "negative",
-              position: "top",
-              message: errMsg,
-              icon: "report_problem",
-            });
-            console.log(errMsg);
-            this.drawing = false;
-            this.started = false;
-          });
-        this.drawing = true;
+        this.draw(this.prizes[this.currentPrizeIndex].no);
       }
     },
   },
