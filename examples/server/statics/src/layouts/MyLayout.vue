@@ -138,25 +138,20 @@ export default {
           : amount;
       var newAvailableParticipants = availableParticipants;
 
-      var fakeWinnerIndexes = [];
       var fakeWinners = [];
 
-      while (fakeWinnerIndexes.length < newAmount) {
+      while (fakeWinners.length < newAmount) {
         var minIndex = 0;
         var maxIndex = newAvailableParticipants.length - 1;
 
         var index = this.getRandomInt(minIndex, maxIndex);
-        fakeWinnerIndexes.push(index);
+        var fakeWinner = newAvailableParticipants[index];
+        fakeWinners.push(fakeWinner);
 
         // Remove winner from available participants.
         newAvailableParticipants = newAvailableParticipants.filter(
-          (item) => item !== index
+          (item) => item !== fakeWinner
         );
-      }
-
-      for (var i = 0; i < fakeWinnerIndexes.length; i++) {
-        var index = fakeWinnerIndexes[i];
-        fakeWinners.push(this.availableParticipants[index]);
       }
 
       return fakeWinners;
