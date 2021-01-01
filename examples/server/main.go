@@ -48,12 +48,13 @@ func prizes(w http.ResponseWriter, r *http.Request) {
 
 		if errMsg == "" {
 			resp.Success = true
-			resp.Prizes = prizes
 		} else {
 			resp.Success = false
 			resp.ErrMsg = errMsg
 			log.Printf("prizes(): error: %v", errMsg)
 		}
+
+		resp.Prizes = prizes
 
 		w.Header().Set("Content-Type", "application/json")
 
@@ -97,13 +98,14 @@ func availableParticipants(w http.ResponseWriter, r *http.Request) {
 
 		if errMsg == "" {
 			resp.Success = true
-			resp.PrizeNo = req.PrizeNo
-			resp.AvailableParticipants = availableParticipants
 		} else {
 			resp.Success = false
 			resp.ErrMsg = errMsg
 			log.Printf("availableParticipants(): error: %v", errMsg)
 		}
+
+		resp.PrizeNo = req.PrizeNo
+		resp.AvailableParticipants = availableParticipants
 
 		w.Header().Set("Content-Type", "application/json")
 
@@ -153,13 +155,14 @@ func winners(w http.ResponseWriter, r *http.Request) {
 
 		if errMsg == "" {
 			resp.Success = true
-			resp.PrizeNo = req.PrizeNo
-			resp.Winners = winners
 		} else {
 			resp.Success = false
 			resp.ErrMsg = errMsg
 			log.Printf("winners(): error: %v", errMsg)
 		}
+
+		resp.PrizeNo = req.PrizeNo
+		resp.Winners = winners
 
 		w.Header().Set("Content-Type", "application/json")
 
@@ -208,13 +211,14 @@ func draw(w http.ResponseWriter, r *http.Request) {
 
 		if errMsg == "" {
 			resp.Success = true
-			resp.PrizeNo = req.PrizeNo
-			resp.Winners = winners
 		} else {
 			resp.Success = false
 			resp.ErrMsg = errMsg
 			log.Printf("draw(): error: %v", errMsg)
 		}
+
+		resp.PrizeNo = req.PrizeNo
+		resp.Winners = winners
 
 		w.Header().Set("Content-Type", "application/json")
 
@@ -268,13 +272,14 @@ func revoke(w http.ResponseWriter, r *http.Request) {
 
 		if errMsg == "" {
 			resp.Success = true
-			resp.PrizeNo = req.PrizeNo
-			resp.RevokedWinners = req.RevokedWinners
 		} else {
 			resp.Success = false
 			resp.ErrMsg = errMsg
 			log.Printf("revoke(): error: %v", errMsg)
 		}
+
+		resp.PrizeNo = req.PrizeNo
+		resp.RevokedWinners = req.RevokedWinners
 
 		w.Header().Set("Content-Type", "application/json")
 
@@ -329,14 +334,15 @@ func redraw(w http.ResponseWriter, r *http.Request) {
 
 		if errMsg == "" {
 			resp.Success = true
-			resp.PrizeNo = req.PrizeNo
-			resp.Amount = req.Amount
-			resp.Winners = winners
 		} else {
 			resp.Success = false
 			resp.ErrMsg = errMsg
 			log.Printf("redraw(): error: %v", errMsg)
 		}
+
+		resp.PrizeNo = req.PrizeNo
+		resp.Amount = req.Amount
+		resp.Winners = winners
 
 		w.Header().Set("Content-Type", "application/json")
 

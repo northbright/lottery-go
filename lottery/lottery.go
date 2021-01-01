@@ -153,10 +153,8 @@ func (l *Lottery) LoadPrizesCSVFile(file string) error {
 }
 
 func prizeMapToSlice(m map[int]Prize, descOrder bool) []Prize {
-	var (
-		s      []int
-		prizes []Prize
-	)
+	s := []int{}
+	prizes := []Prize{}
 
 	// Sort prize map by key
 	for prizeNo, _ := range m {
@@ -206,10 +204,8 @@ func (l *Lottery) LoadBlacklistsJSONFile(f string) error {
 }
 
 func blacklistMapToSlice(m map[int]Blacklist) []Blacklist {
-	var (
-		s          []int
-		blacklists []Blacklist
-	)
+	s := []int{}
+	blacklists := []Blacklist{}
 
 	// Sort blacklist map by key
 	for prizeNo, _ := range m {
@@ -268,7 +264,7 @@ func (l *Lottery) LoadParticipantsCSVFile(file string) error {
 }
 
 func participantMapToSlice(m map[string]Participant) []Participant {
-	var participants []Participant
+	participants := []Participant{}
 
 	for _, p := range m {
 		participants = append(participants, p)
@@ -359,7 +355,7 @@ func removeParticipant(s []Participant, i int) []Participant {
 }
 
 func draw(prizeAmount int, participants []Participant) []Participant {
-	var winners []Participant
+	winners := []Participant{}
 
 	if prizeAmount <= 0 || len(participants) <= 0 {
 		return winners
@@ -387,7 +383,7 @@ func (l *Lottery) Draw(prizeNo int) ([]Participant, error) {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
-	var winners []Participant
+	winners := []Participant{}
 
 	if _, ok := l.prizes[prizeNo]; !ok {
 		return winners, ErrPrizeNo
@@ -450,7 +446,7 @@ func (l *Lottery) Redraw(prizeNo int, amount int) ([]Participant, error) {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
-	var winners []Participant
+	winners := []Participant{}
 
 	if _, ok := l.prizes[prizeNo]; !ok {
 		return winners, ErrPrizeNo
