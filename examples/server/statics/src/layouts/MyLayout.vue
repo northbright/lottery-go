@@ -303,8 +303,10 @@ export default {
       return this.isCurrentWinnerSelected(index) ? "purple" : "red";
     },
 
-    prizeHasWinners() {
-      return this.winners.length === undefined || this.winners.length === 0
+    currentPrizeHasWinners() {
+      return this.winners.length === undefined ||
+        this.winners.length === 0 ||
+        this.winners[0].id === "?"
         ? false
         : true;
     },
@@ -313,12 +315,18 @@ export default {
       if (prizeIndex === this.currentPrizeIndex) {
         return "bg-red";
       } else {
-        return this.prizeHasWinners() ? "bg-pink-2" : "bg-gray";
+        return "bg-pink-2";
       }
     },
 
     startStop() {
       if (!this.started) {
+        if (this.currentPrizeHasWinners()) {
+          var errMsg = "Winners of current prize exist";
+          this.notify(errMsg);
+          return;
+        }
+
         // Generate random winners
         this.timer = setInterval(() => {
           var amount = this.prizes[this.currentPrizeIndex].amount;
