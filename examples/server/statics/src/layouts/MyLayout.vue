@@ -326,7 +326,6 @@ export default {
             this.availableParticipants,
             amount
           );
-          console.log(this.winners);
         }, 100);
         this.started = true;
       } else {
