@@ -327,6 +327,12 @@ export default {
           return;
         }
 
+        if (this.availableParticipants.length === 0) {
+          var errMsg = "No available participants for current prize";
+          this.notify(errMsg);
+          return;
+        }
+
         // Generate random winners
         this.timer = setInterval(() => {
           var amount = this.prizes[this.currentPrizeIndex].amount;
