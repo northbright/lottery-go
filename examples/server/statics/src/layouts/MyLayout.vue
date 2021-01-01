@@ -259,6 +259,12 @@ export default {
     },
 
     selectPrize(index) {
+      // Clear timer if needed.
+      if (this.started) {
+        clearInterval(this.timer);
+        this.started = false;
+      }
+
       // Update current prize index and content.
       this.currentPrizeIndex = index;
       this.currentPrizeContent =
