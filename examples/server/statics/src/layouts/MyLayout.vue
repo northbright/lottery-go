@@ -66,7 +66,7 @@
           :key="index"
           :size="fontSize"
           @click="selectWinner(index)"
-          color="red"
+          :color="getButtonColor(index)"
         ></q-btn>
       </div>
     </q-page-container>
@@ -87,6 +87,8 @@ export default {
       prizes: [],
       availableParticipants: [],
       winners: [],
+      selectedWinnerIndexes: [],
+      revokedWinners: [],
       started: false,
       drawing: false,
       fontSize: "35px",
@@ -260,6 +262,9 @@ export default {
         this.started = false;
       }
 
+      // Clear selected winner indexes.
+      this.selectedWinnerIndexes = [];
+
       // Update current prize index and content.
       this.currentPrizeIndex = index;
       this.currentPrizeContent =
@@ -293,11 +298,19 @@ export default {
     },
 
     isCurrentWinnerSelected(index) {
-      var idx = this.oldWinnerIndexes.indexOf(index);
-      return idx !== -1;
+      return this.selectedWinnerIndexes.indexOf(index) !== -1;
     },
 
-    selectWinner(index) {},
+    selectWinner(index) {
+      if (this.isCurrentWinnerSelected(index)) {
+        // Remove winner index from selected winner indexes.
+        this.selectedWinnerIndexes = this.selectedWinnerIndexes.filter(
+          (item) => item !== index
+        );
+      } else {
+        this.selectedWinnerIndexes.push(index);
+      }
+    },
 
     getButtonColor(index) {
       return this.isCurrentWinnerSelected(index) ? "purple" : "red";
