@@ -66,7 +66,7 @@
           :key="index"
           :size="fontSize"
           @click="selectWinner(index)"
-          :color="getButtonColor(index)"
+          :color="getWinnerColor(index)"
         ></q-btn>
       </div>
     </q-page-container>
@@ -312,7 +312,7 @@ export default {
       }
     },
 
-    getButtonColor(index) {
+    getWinnerColor(index) {
       return this.isCurrentWinnerSelected(index) ? "purple" : "red";
     },
 
