@@ -101,7 +101,7 @@ export default {
 
   mounted() {
     var _this = this;
-    document.onkeydown = function(e) {
+    document.onkeyup = function(e) {
       const key = e.keyCode;
       if (key === 13) {
         window.event.preventDefault();
@@ -225,14 +225,6 @@ export default {
         });
     },
 
-    hasSelectedWinners() {
-      console.log(
-        "this.selectedWinnerIndexes.length: " +
-          this.selectedWinnerIndexes.length
-      );
-      return this.selectedWinnerIndexes.length !== 0 ? true : false;
-    },
-
     draw(prizeNo) {
       if (this.drawing) {
         var msg = "is drawing...please wait";
@@ -345,9 +337,17 @@ export default {
       }
     },
 
+    hasSelectedWinners() {
+      return this.selectedWinnerIndexes.length !== 0 ? true : false;
+    },
+
     getDrawButtonLabel() {
       if (this.started !== true) {
-        return "开始";
+        if (!this.hasSelectedWinners()) {
+          return "开始";
+        } else {
+          return "开始重抽";
+        }
       } else {
         return "停止";
       }
