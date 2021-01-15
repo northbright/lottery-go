@@ -27,7 +27,7 @@
           style="width: 200px"
           size="20px"
           :label="getDrawButtonLabel()"
-          @click="startStop()"
+          @click="onDrawButtonClick()"
         />
       </div>
     </q-footer>
@@ -105,7 +105,7 @@ export default {
       const key = e.keyCode;
       if (key === 13) {
         window.event.preventDefault();
-        _this.startStop();
+        _this.onDrawButtonClick();
       }
     };
 
@@ -225,6 +225,14 @@ export default {
         });
     },
 
+    hasSelectedWinners() {
+      console.log(
+        "this.selectedWinnerIndexes.length: " +
+          this.selectedWinnerIndexes.length
+      );
+      return this.selectedWinnerIndexes.length !== 0 ? true : false;
+    },
+
     draw(prizeNo) {
       if (this.drawing) {
         var msg = "is drawing...please wait";
@@ -341,7 +349,7 @@ export default {
       }
     },
 
-    startStop() {
+    onDrawButtonClick() {
       if (!this.started) {
         if (this.currentPrizeHasWinners()) {
           var errMsg = "Winners of current prize exist";
