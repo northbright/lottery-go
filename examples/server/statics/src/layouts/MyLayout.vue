@@ -25,7 +25,7 @@
           text-color="black"
           type="submit"
           size="20px"
-          label="start/stop"
+          :label="getDrawButtonLabel()"
           @click="startStop()"
         />
       </div>
@@ -329,6 +329,14 @@ export default {
         return "bg-red";
       } else {
         return "bg-pink-2";
+      }
+    },
+
+    getDrawButtonLabel() {
+      if (this.started !== true) {
+        return "开始";
+      } else {
+        return "停止";
       }
     },
 
