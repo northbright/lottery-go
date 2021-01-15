@@ -24,6 +24,7 @@
           color="pink-3"
           text-color="black"
           type="submit"
+          style="width: 200px"
           size="20px"
           :label="getDrawButtonLabel()"
           @click="startStop()"
