@@ -311,6 +311,10 @@ export default {
     },
 
     selectWinner(index) {
+      if (this.winners[index].id === "?") {
+        return;
+      }
+
       if (this.isCurrentWinnerSelected(index)) {
         // Remove winner index from selected winner indexes.
         this.selectedWinnerIndexes = this.selectedWinnerIndexes.filter(
