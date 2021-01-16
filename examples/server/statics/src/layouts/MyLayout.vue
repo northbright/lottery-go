@@ -88,8 +88,12 @@ export default {
       prizes: [],
       availableParticipants: [],
       winners: [],
+      // Record selected winner indexes to change these winners with fake winners when redraw.
       selectedWinnerIndexes: [],
-      revokedWinners: [],
+      // Winners be overwritten while generating fake winners,
+      // recording selected winner indexes is not enough,
+      // need also make a copy of selected winners.
+      selectedWinners: [],
       started: false,
       drawing: false,
       fontSize: "35px",
@@ -256,6 +260,66 @@ export default {
         });
     },
 
+    revokeAndRedraw(prizeNo) {
+      if (this.drawing) {
+        var msg = "is re-drawing...please wait";
+        this.notify(msg);
+        return;
+      }
+
+      this.drawing = true;
+
+      console.log("selecteWinners:");
+      console.log(this.selectedWinners);
+
+      axios
+        .post("/revoke", {
+          prize_no: prizeNo,
+          revoked_winners: this.selectedWinners,
+        })
+        .then((response) => {
+          if (response.data.success) {
+            // Revoke winners successfully, re-draw new winners
+            axios
+              .post("/redraw", {
+                prize_no: prizeNo,
+                amount: this.selectedWinners.length,
+              })
+              .then((response) => {
+                var newWinners = response.data.winners;
+
+                // Replace revoked winners with new winners
+                for (var i = 0; i < this.selectedWinnerIndexes.length; i++) {
+                  this.winners.splice(
+                    this.selectedWinnerIndexes[i],
+                    1,
+                    newWinners[i]
+                  );
+                }
+              })
+              .catch((e) => {
+                var errMsg = "/redraw axios error: " + e;
+                this.notify(errMsg);
+              })
+              .then(() => {
+                this.started = false;
+                this.drawing = false;
+              });
+          } else {
+            var errMsg = "/revoke error: " + response.data.err_msg;
+            this.notify(errMsg);
+          }
+        })
+        .catch((e) => {
+          var errMsg = "/revoke axios error: " + e;
+          this.notify(errMsg);
+        })
+        .then(() => {
+          this.started = false;
+          this.drawing = false;
+        });
+    },
+
     selectPrize(index) {
       // Clear timer if needed.
       if (this.started) {
@@ -263,8 +327,9 @@ export default {
         this.started = false;
       }
 
-      // Clear selected winner indexes.
+      // Clear selected winners.
       this.selectedWinnerIndexes = [];
+      this.selectedWinners = [];
 
       // Update current prize index and content.
       this.currentPrizeIndex = index;
@@ -303,6 +368,12 @@ export default {
     },
 
     selectWinner(index) {
+      if (this.started) {
+        var errMsg = "Can not select winner when drawing or redrawing...";
+        this.notify(errMsg);
+        return;
+      }
+
       if (this.winners[index].id === "?") {
         return;
       }
@@ -354,32 +425,93 @@ export default {
     },
 
     onDrawButtonClick() {
-      if (!this.started) {
-        if (this.currentPrizeHasWinners()) {
-          var errMsg = "Winners of current prize exist";
-          this.notify(errMsg);
-          return;
-        }
+      // Draw
+      if (!this.hasSelectedWinners()) {
+        if (!this.started) {
+          if (this.currentPrizeHasWinners()) {
+            var errMsg = "Winners of current prize exist";
+            this.notify(errMsg);
+            return;
+          }
 
-        if (this.availableParticipants.length === 0) {
-          var errMsg = "No available participants for current prize";
-          this.notify(errMsg);
-          return;
-        }
+          if (this.availableParticipants.length === 0) {
+            var errMsg = "No available participants for current prize";
+            this.notify(errMsg);
+            return;
+          }
 
-        // Generate random winners
-        this.timer = setInterval(() => {
-          var amount = this.prizes[this.currentPrizeIndex].amount;
-          this.winners = this.getRandomFakeWinners(
-            this.availableParticipants,
-            amount
-          );
-        }, 100);
-        this.started = true;
+          // Generate random winners
+          this.timer = setInterval(() => {
+            var amount = this.prizes[this.currentPrizeIndex].amount;
+            this.winners = this.getRandomFakeWinners(
+              this.availableParticipants,
+              amount
+            );
+          }, 100);
+          this.started = true;
+        } else {
+          clearInterval(this.timer);
+
+          this.draw(this.prizes[this.currentPrizeIndex].no);
+        }
       } else {
-        clearInterval(this.timer);
+        // Revoke and re-draw
+        if (!this.started) {
+          if (!this.hasSelectedWinners()) {
+            var errMsg = "No selected winners to revoke";
+            this.notify(errMsg);
+            return;
+          }
 
-        this.draw(this.prizes[this.currentPrizeIndex].no);
+          if (this.availableParticipants.length === 0) {
+            var errMsg = "No available participants for current prize";
+            this.notify(errMsg);
+            return;
+          }
+
+          // Copy selected winners.
+          this.selectedWinners = [];
+          for (var i = 0; i < this.selectedWinnerIndexes.length; i++) {
+            this.selectedWinners.push(
+              this.winners[this.selectedWinnerIndexes[i]]
+            );
+          }
+
+          console.log("available participants: ");
+          console.log(this.availableParticipants);
+
+          // Generate random winners
+          this.timer = setInterval(() => {
+            var amount = this.selectedWinnerIndexes.length;
+            var fakeRedrawWinners = this.getRandomFakeWinners(
+              this.availableParticipants,
+              amount
+            );
+
+            console.log("fakeRedrawWinners:");
+            console.log(fakeRedrawWinners);
+
+            for (var i = 0; i < fakeRedrawWinners.length; i++) {
+              this.winners.splice(
+                this.selectedWinnerIndexes[i],
+                1,
+                fakeRedrawWinners[i]
+              );
+
+              console.log(
+                "this.selectedWinnerIndexes[i]: " +
+                  this.selectedWinnerIndexes[i]
+              );
+              console.log("fakeRedrawWinners[i]: ");
+              console.log(fakeRedrawWinners[i]);
+            }
+          }, 100);
+          this.started = true;
+        } else {
+          clearInterval(this.timer);
+
+          this.revokeAndRedraw(this.prizes[this.currentPrizeIndex].no);
+        }
       }
     },
   },
