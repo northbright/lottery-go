@@ -1,5 +1,7 @@
 # Example Server
 
+This server is an example lucky draw server which based on [lottery](https://godoc.org/github.com/northbright/lottery-go/lottery) package.
+
 ## Front-End
 * [Quasar](https://quasar.dev/) SPA
 * How to build
