@@ -245,6 +245,9 @@ export default {
         .then((response) => {
           if (response.data.success) {
             this.winners = response.data.winners;
+
+            // get available participants.
+            this.getAvailableParticipants(prizeNo);
           } else {
             var errMsg = "/draw error: " + response.data.err_msg;
             this.notify(errMsg);
@@ -296,6 +299,9 @@ export default {
                     newWinners[i]
                   );
                 }
+
+                // get available participants.
+                this.getAvailableParticipants(prizeNo);
               })
               .catch((e) => {
                 var errMsg = "/redraw axios error: " + e;
