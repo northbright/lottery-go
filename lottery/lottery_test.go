@@ -8,9 +8,9 @@ import (
 
 func Example() {
 	var (
-		participantsCSV = "participants.example.csv"
-		prizesCSV       = "prizes.example.csv"
-		blacklistsJSON  = "blacklists.example.json"
+		participantsCSV = "settings/participants.example.csv"
+		prizesCSV       = "settings/prizes.example.csv"
+		blacklistsJSON  = "settings/blacklists.example.json"
 	)
 
 	// Create a lottery.
