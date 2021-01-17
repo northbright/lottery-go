@@ -246,6 +246,11 @@ func draw(w http.ResponseWriter, r *http.Request) {
 		errMsg = fmt.Sprintf("draw(): Draw() error: %v", err)
 		return
 	}
+
+	if err := lott.SaveToFile(); err != nil {
+		errMsg = fmt.Sprintf("draw(): SaveToFile() error: %v", err)
+		return
+	}
 }
 
 // revoke revokes the winners of given prize no.
@@ -304,6 +309,11 @@ func revoke(w http.ResponseWriter, r *http.Request) {
 
 	if err := lott.Revoke(req.PrizeNo, req.RevokedWinners); err != nil {
 		errMsg = fmt.Sprintf("revoke(): Revoke() error: %v", err)
+		return
+	}
+
+	if err := lott.SaveToFile(); err != nil {
+		errMsg = fmt.Sprintf("revoke(): SaveToFile() error: %v", err)
 		return
 	}
 }
@@ -368,6 +378,11 @@ func redraw(w http.ResponseWriter, r *http.Request) {
 	winners, err := lott.Redraw(req.PrizeNo, req.Amount)
 	if err != nil {
 		errMsg = fmt.Sprintf("redraw(): Redraw() error: %v", err)
+		return
+	}
+
+	if err := lott.SaveToFile(); err != nil {
+		errMsg = fmt.Sprintf("redraw(): SaveToFile() error: %v", err)
 		return
 	}
 }
