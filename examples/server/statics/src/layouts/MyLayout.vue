@@ -453,7 +453,7 @@ export default {
               this.availableParticipants,
               amount
             );
-          }, 100);
+          }, 50);
           this.started = true;
         } else {
           clearInterval(this.timer);
@@ -511,7 +511,7 @@ export default {
               console.log("fakeRedrawWinners[i]: ");
               console.log(fakeRedrawWinners[i]);
             }
-          }, 100);
+          }, 50);
           this.started = true;
         } else {
           clearInterval(this.timer);
