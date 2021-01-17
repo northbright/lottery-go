@@ -82,7 +82,6 @@
 
     The CSV file is used to set prize's No., name, amount and description.
 
-    ```
     | No | Name | Amount | Desc |
     | :--: | :--: | :--: | :--: |
     | 5 | 5th prize | 10 | USB Hard drive |
@@ -90,7 +89,6 @@
     | 3 | 3th prize | 5 | Vacuum Cleaner |
     | 2 | 2nd prize | 2 | Macbook Pro |
     | 1 | 1st prize | 1 | iPhone |
-    ```
 
 * Run
   
