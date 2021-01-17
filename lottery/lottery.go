@@ -593,7 +593,7 @@ func (l *Lottery) Load(r io.Reader) error {
 		return err
 	}
 
-	checksum := computeWinnersHash(l.winners)
+	checksum := computeWinnersHash(data.Winners)
 	if fmt.Sprintf("%X", checksum) != data.Checksum {
 		return ErrChecksum
 	}
