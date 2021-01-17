@@ -272,9 +272,6 @@ export default {
 
       this.drawing = true;
 
-      console.log("selecteWinners:");
-      console.log(this.selectedWinners);
-
       axios
         .post("/revoke", {
           prize_no: prizeNo,
@@ -483,9 +480,6 @@ export default {
             );
           }
 
-          console.log("available participants: ");
-          console.log(this.availableParticipants);
-
           // Generate random winners
           this.timer = setInterval(() => {
             var amount = this.selectedWinnerIndexes.length;
@@ -494,22 +488,12 @@ export default {
               amount
             );
 
-            console.log("fakeRedrawWinners:");
-            console.log(fakeRedrawWinners);
-
             for (var i = 0; i < fakeRedrawWinners.length; i++) {
               this.winners.splice(
                 this.selectedWinnerIndexes[i],
                 1,
                 fakeRedrawWinners[i]
               );
-
-              console.log(
-                "this.selectedWinnerIndexes[i]: " +
-                  this.selectedWinnerIndexes[i]
-              );
-              console.log("fakeRedrawWinners[i]: ");
-              console.log(fakeRedrawWinners[i]);
             }
           }, 50);
           this.started = true;
