@@ -48,6 +48,50 @@
   ```
   go build
   ```
+* Settings
+  * Server settings(`./settings/config.json`)
+
+    The JSON file contains server address and lottery activity name.
+
+    ```
+    {
+        "addr":":8080",
+        "lottery_name":"New Year's Party Lottery"
+    }
+    ```
+
+  * Participants(`./settings/participants.csv`)
+
+    The CSV file contains records of participants include ID and Name.
+
+    | ID | Name |
+    | :--: | :--: |
+    | 5 | Fal |
+    | 7 | Nango |
+    | 8 | Jacky |
+    | 9 | Sonny |
+    | 10 | Luke |
+    | 11 | Mic |
+    | 12 | Ric |
+    | 13 | Capt |
+    | 14 | Andy |
+    | 17 | Alex |
+    | 33 | Xiao |
+
+  * Prizes(`./settings/prizes.csv`)
+
+    The CSV file is used to set prize's No., name, amount and description.
+
+    ```
+    | No | Name | Amount | Desc |
+    | :--: | :--: | :--: | :--: |
+    | 5 | 5th prize | 10 | USB Hard drive |
+    | 4 | 4th prize | 8 | Bluetooth Speaker |
+    | 3 | 3th prize | 5 | Vacuum Cleaner |
+    | 2 | 2nd prize | 2 | Macbook Pro |
+    | 1 | 1st prize | 1 | iPhone |
+    ```
+
 * Run
   
   ```
